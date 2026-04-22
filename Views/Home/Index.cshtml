@@ -1,0 +1,156 @@
+@model IEnumerable<Product>
+@{ ViewData["Title"] = "Inicio"; }
+
+<!-- Carrusel Hero Principal -->
+<div id="heroCarousel" class="carousel slide carousel-fade mb-0" data-bs-ride="carousel" data-bs-interval="5000">
+  <div class="carousel-indicators">
+    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Boxeo"></button>
+    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="1" aria-label="Suplementos"></button>
+    <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="2" aria-label="Tenis"></button>
+  </div>
+  <div class="carousel-inner">
+    
+    <!-- Slide 1: Boxeo -->
+    <div class="carousel-item active" style="min-height: 70vh; background: linear-gradient(135deg, rgba(10,10,10,0.85) 0%, rgba(26,5,5,0.7) 50%, rgba(10,10,10,0.85) 100%), url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1400&q=80') center/cover; padding: 100px 0;">
+      <div class="container d-flex align-items-center" style="min-height: 50vh;">
+          <div class="row w-100">
+              <div class="col-12 col-md-8 col-lg-7">
+                  <h1 class="dyp-hero-title">Desata Tu<br /><span class="text-danger">Verdadero Potencial</span></h1>
+                  <p class="dyp-hero-subtitle mt-3 fs-5">Equipamiento de boxeo de alto rendimiento y guantes premium para llevar tu entrenamiento al siguiente nivel táctico y físico.</p>
+                  <div class="d-flex flex-column flex-sm-row gap-3 mt-4">
+                      <a asp-controller="Products" asp-action="Index" class="btn btn-danger btn-lg px-5 py-3 fw-bold rounded-pill"><i class="bi bi-cart3 me-2"></i>Comprar Ahora</a>
+                      <a asp-controller="Products" asp-action="Index" asp-route-category="boxing" class="btn btn-outline-light btn-lg px-5 py-3 fw-bold rounded-pill">Ver de Boxeo</a>
+                  </div>
+              </div>
+          </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: Suplementos -->
+    <div class="carousel-item" style="min-height: 70vh; background: linear-gradient(135deg, rgba(10,10,10,0.85) 0%, rgba(5,26,10,0.7) 50%, rgba(10,10,10,0.85) 100%), url('https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=1400&q=80') center/cover; padding: 100px 0;">
+      <div class="container d-flex align-items-center" style="min-height: 50vh;">
+          <div class="row w-100 justify-content-end">
+              <div class="col-12 col-md-8 col-lg-7 text-md-end">
+                  <h1 class="dyp-hero-title">Nutrición que<br /><span class="text-success">Marca la Diferencia</span></h1>
+                  <p class="dyp-hero-subtitle ms-auto mt-3 fs-5 text-md-end text-start">Descubre nuestra línea de suplementos premium: proteínas, vitaminas y todo lo necesario para una recuperación explosiva y construcción muscular.</p>
+                  <div class="d-flex flex-column flex-sm-row justify-content-md-end gap-3 mt-4">
+                      <a asp-controller="Products" asp-action="Index" asp-route-category="supplements" class="btn btn-success btn-lg px-5 py-3 fw-bold rounded-pill"><i class="bi bi-lightning-charge-fill me-2"></i>Comprar Suplementos</a>
+                  </div>
+              </div>
+          </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: Tenis -->
+    <div class="carousel-item" style="min-height: 70vh; background: linear-gradient(135deg, rgba(10,10,10,0.85) 0%, rgba(5,35,55,0.7) 50%, rgba(10,10,10,0.85) 100%), url('https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=1400&q=80') center/cover; padding: 100px 0;">
+      <div class="container d-flex align-items-center" style="min-height: 50vh;">
+          <div class="row w-100">
+              <div class="col-12 col-md-8 col-lg-7 text-center text-md-start">
+                  <h1 class="dyp-hero-title">Pisa Fuerte<br /><span class="text-primary">Alcanza la Cima</span></h1>
+                  <p class="dyp-hero-subtitle mt-3 fs-5 mx-auto mx-md-0">Calzado deportivo de última generación para lograr el máximo agarre, velocidad insuperable y confort absoluto entrenando.</p>
+                  <div class="d-flex flex-column flex-sm-row gap-3 mt-4 justify-content-center justify-content-md-start">
+                      <a asp-controller="Products" asp-action="Index" asp-route-category="shoes" class="btn btn-primary btn-lg px-5 py-3 fw-bold rounded-pill"><i class="bi bi-shop me-2"></i>Explorar Tenis</a>
+                  </div>
+              </div>
+          </div>
+      </div>
+    </div>
+
+  </div>
+  <button class="carousel-control-prev" style="width: 5%;" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon" aria-hidden="true" style="filter: drop-shadow(0 0 5px rgba(0,0,0,0.8));"></span>
+    <span class="visually-hidden">Anterior</span>
+  </button>
+  <button class="carousel-control-next" style="width: 5%;" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+    <span class="carousel-control-next-icon" aria-hidden="true" style="filter: drop-shadow(0 0 5px rgba(0,0,0,0.8));"></span>
+    <span class="visually-hidden">Siguiente</span>
+  </button>
+</div>
+
+<section class="py-5 bg-dark">
+    <div class="container">
+        <div class="row g-3">
+            <div class="col-12 col-sm-4">
+                <a asp-controller="Products" asp-action="Index" asp-route-category="boxing" class="text-decoration-none">
+                    <div class="dyp-category-card text-center p-4">
+                        <i class="bi bi-shield-fill text-danger" style="font-size:2.5rem"></i>
+                        <h5 class="fw-bold text-white text-uppercase mt-3 mb-1">Boxeo</h5>
+                        <p class="text-secondary small mb-0">Guantes, sacos y protecciones.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-4">
+                <a asp-controller="Products" asp-action="Index" asp-route-category="shoes" class="text-decoration-none">
+                    <div class="dyp-category-card text-center p-4">
+                        <i class="bi bi-lightning-fill text-primary" style="font-size:2.5rem"></i>
+                        <h5 class="fw-bold text-white text-uppercase mt-3 mb-1">Tenis</h5>
+                        <p class="text-secondary small mb-0">Calzado especializado para entrenar.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-12 col-sm-4">
+                <a asp-controller="Products" asp-action="Index" asp-route-category="supplements" class="text-decoration-none">
+                    <div class="dyp-category-card text-center p-4">
+                        <i class="bi bi-droplet-fill text-success" style="font-size:2.5rem"></i>
+                        <h5 class="fw-bold text-white text-uppercase mt-3 mb-1">Suplementos</h5>
+                        <p class="text-secondary small mb-0">Proteína, pre-entrenos y vitaminas.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+            <div>
+                <h2 class="dyp-section-title">Productos Destacados</h2>
+                <div class="dyp-underline"></div>
+            </div>
+            <a asp-controller="Products" asp-action="Index" class="btn btn-outline-danger btn-sm d-none d-sm-flex align-items-center gap-2">Ver Todo <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="row g-3">
+            @foreach (var p in Model)
+            {
+                <div class="col-6 col-md-3">
+                    <div class="dyp-product-card h-100">
+                        <a asp-controller="Products" asp-action="Details" asp-route-id="@p.Id" class="text-decoration-none">
+                            <div class="dyp-product-img-wrap">
+                                <img src="@(p.ImageUrl ?? "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=400&q=80")" alt="@p.Name" class="dyp-product-img" />
+                                <span class="dyp-badge-cat dyp-cat-@p.Category.ToString().ToLower()">@p.Category.ToString().ToUpper()</span>
+                            </div>
+                        </a>
+                        <div class="dyp-product-body">
+                            <div class="dyp-brand">@p.Brand</div>
+                            <a asp-controller="Products" asp-action="Details" asp-route-id="@p.Id" class="text-decoration-none"><h6 class="dyp-product-name">@p.Name</h6></a>
+                            <div class="d-flex justify-content-between align-items-center mt-auto pt-2">
+                                <span class="dyp-price">$@p.Price.ToString("N2")</span>
+                                <small class="text-secondary">Stock: @p.Stock</small>
+                            </div>
+                        </div>
+                        <div class="dyp-product-footer">
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <form asp-controller="Cart" asp-action="Add" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="productId" value="@p.Id" /><input type="hidden" name="quantity" value="1" />
+                                    <button type="submit" class="btn btn-danger w-100 btn-sm" @(p.Stock<=0?"disabled":"")>
+                                        <i class="bi bi-cart-plus me-1"></i>@(p.Stock>0?"Añadir":"Agotado")
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-danger w-100 btn-sm"><i class="bi bi-box-arrow-in-right me-1"></i>Ingresar</a>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <div class="mt-4 d-sm-none">
+            <a asp-controller="Products" asp-action="Index" class="btn btn-outline-danger w-100">Ver todos los productos</a>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,74 @@
+@model IEnumerable<DYPStore.Models.Order>
+@{ ViewData["Title"] = "Pedidos"; }
+
+<h2 class="fw-bold text-uppercase mb-4">Gestión de Pedidos</h2>
+
+@foreach (var order in Model)
+{
+    var badge = order.Status switch {
+        OrderStatus.completed => "bg-success",
+        OrderStatus.pending => "bg-warning text-dark",
+        OrderStatus.processing => "bg-info text-dark",
+        OrderStatus.cancelled => "bg-danger",
+        _ => "bg-secondary"
+    };
+
+    <div class="dyp-summary-box rounded-3 mb-4 overflow-hidden">
+        <div class="p-3 d-flex flex-wrap justify-content-between align-items-center gap-3" style="background:#111;border-bottom:1px solid #222;">
+            
+            <div class="d-flex gap-4 flex-wrap">
+                <div>
+                    <div class="text-secondary small">Pedido #</div>
+                    <div class="fw-bold font-monospace">@order.Id.ToString("D6")</div>
+                </div>
+                <div>
+                    <div class="text-secondary small">Cliente</div>
+                    <div class="fw-bold">@order.User?.FullName</div>
+                </div>
+                <div>
+                    <div class="text-secondary small">Fecha</div>
+                    <div class="fw-bold small">@order.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+                <div>
+                    <div class="text-secondary small">Total</div>
+                    <div class="fw-bold text-danger">$@order.Total.ToString("N2")</div>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge @badge">@order.Status.ToString().ToUpper()</span>
+
+                <form asp-action="UpdateOrderStatus" method="post" class="d-flex gap-2 align-items-center">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="orderId" value="@order.Id" />
+
+                    <select name="status" class="form-select form-select-sm dyp-input" style="width:140px;">
+                        @foreach (var s in Enum.GetValues<OrderStatus>())
+                        {
+                            <option value="@s" selected="@(order.Status == s ? "selected" : null)">
+                                @s.ToString().ToUpper()
+                            </option>
+                        }
+                    </select>
+
+                    <button type="submit" class="btn btn-sm btn-outline-light">Cambiar</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="p-3">
+            @foreach (var item in order.Items)
+            {
+                <div class="d-flex justify-content-between align-items-center py-1 border-bottom border-dark">
+                    <div>
+                        <span class="badge bg-secondary me-2">@item.Quantity&#xd7;</span>
+                        @item.ProductName
+                    </div>
+                    <span class="text-secondary small font-monospace">
+                        $@item.UnitPrice.ToString("N2")
+                    </span>
+                </div>
+            }
+        </div>
+    </div>
+}

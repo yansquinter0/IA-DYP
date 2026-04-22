@@ -1,0 +1,97 @@
+@model IEnumerable<Product>
+@{ ViewData["Title"] = "Tienda"; var cat = ViewBag.CurrentCategory as string; var search = ViewBag.CurrentSearch as string; }
+
+<div class="container py-4 py-md-5">
+    <!-- Filtros Mobile -->
+    <div class="d-md-none mb-4">
+        <form asp-controller="Products" asp-action="Index" method="get" class="d-flex gap-2 mb-3">
+            <input type="search" name="search" class="form-control dyp-input" placeholder="Buscar productos..." value="@search" />
+            <button type="submit" class="btn btn-danger px-3"><i class="bi bi-search"></i></button>
+        </form>
+        <div class="d-flex gap-2 overflow-auto pb-2" style="scrollbar-width:none">
+            @foreach (var c in new[]{("","Todos"),("boxing","Boxeo"),("shoes","Tenis"),("supplements","Suplementos")})
+            {
+                <a asp-controller="Products" asp-action="Index" asp-route-category="@c.Item1" asp-route-search="@search"
+                   class="btn btn-sm flex-shrink-0 @(cat==c.Item1?"btn-danger":"btn-outline-secondary")">@c.Item2</a>
+            }
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Sidebar Desktop -->
+        <div class="col-md-3 d-none d-md-block">
+            <h4 class="dyp-section-title mb-4">Filtros</h4>
+            <form asp-controller="Products" asp-action="Index" method="get" class="mb-4">
+                <div class="input-group">
+                    <input type="search" name="search" class="form-control dyp-input" placeholder="Buscar..." value="@search" />
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-search"></i></button>
+                </div>
+            </form>
+            <h6 class="text-uppercase text-secondary fw-bold mb-3">Categorías</h6>
+            <div class="d-flex flex-column gap-2">
+                @foreach (var c in new[]{("","Todos"),("boxing","Boxeo"),("shoes","Tenis Deportivos"),("supplements","Suplementos")})
+                {
+                    <a asp-controller="Products" asp-action="Index" asp-route-category="@c.Item1" asp-route-search="@search"
+                       class="btn text-start @(cat==c.Item1?"btn-danger":"btn-outline-secondary")">@c.Item2</a>
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(cat) || !string.IsNullOrEmpty(search))
+            {
+                <a asp-controller="Products" asp-action="Index" class="btn btn-outline-light w-100 mt-3">
+                    <i class="bi bi-x-circle me-1"></i>Limpiar filtros
+                </a>
+            }
+            <p class="text-secondary small mt-3">@Model.Count() productos encontrados</p>
+        </div>
+
+        <!-- Grid -->
+        <div class="col-md-9">
+            @if (!Model.Any())
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-search" style="font-size:4rem;opacity:.2"></i>
+                    <p class="mt-3 text-secondary text-uppercase fw-bold">No se encontraron productos</p>
+                </div>
+            }
+            else
+            {
+                <div class="row g-3">
+                    @foreach (var p in Model)
+                    {
+                        <div class="col-6 col-lg-4">
+                            <div class="dyp-product-card h-100">
+                                <a asp-controller="Products" asp-action="Details" asp-route-id="@p.Id" class="text-decoration-none">
+                                    <div class="dyp-product-img-wrap">
+                                        <img src="@(p.ImageUrl ?? "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=400&q=80")" alt="@p.Name" class="dyp-product-img" />
+                                        <span class="dyp-badge-cat dyp-cat-@p.Category.ToString().ToLower()">@p.Category.ToString().ToUpper()</span>
+                                    </div>
+                                </a>
+                                <div class="dyp-product-body">
+                                    <div class="dyp-brand">@p.Brand</div>
+                                    <a asp-controller="Products" asp-action="Details" asp-route-id="@p.Id" class="text-decoration-none"><h6 class="dyp-product-name">@p.Name</h6></a>
+                                    <div class="d-flex justify-content-between align-items-center mt-auto pt-2">
+                                        <span class="dyp-price">$@p.Price.ToString("N2")</span>
+                                        <small class="text-secondary">Stock: @p.Stock</small>
+                                    </div>
+                                </div>
+                                <div class="dyp-product-footer">
+                                    @if (User.Identity?.IsAuthenticated == true)
+                                    {
+                                        <form asp-controller="Cart" asp-action="Add" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="productId" value="@p.Id" /><input type="hidden" name="quantity" value="1" />
+                                            <button type="submit" class="btn btn-danger w-100 btn-sm" @(p.Stock<=0?"disabled":"")>
+                                                <i class="bi bi-cart-plus me-1"></i>@(p.Stock>0?"Añadir":"Agotado")
+                                            </button>
+                                        </form>
+                                    }
+                                    else { <a asp-controller="Account" asp-action="Login" class="btn btn-outline-danger w-100 btn-sm">Ingresar</a> }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
