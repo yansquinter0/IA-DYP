@@ -14,6 +14,73 @@ DYPStore es una aplicación web de e-commerce completa construida con ASP.NET Co
 
 ---
 
+## 📂 Ubicación de Archivos Clave
+
+Para facilitar la navegación y demostración del código, aquí están las ubicaciones exactas de los archivos más importantes:
+
+### Configuración Principal
+- **Program.cs**: `DYPStore/Program.cs` - Punto de entrada y configuración de servicios
+- **appsettings.json**: `DYPStore/appsettings.json` - Configuraciones de BD, email, etc.
+- **appsettings.Development.json**: `DYPStore/appsettings.Development.json` - Configuraciones de desarrollo
+
+### Base de Datos y Modelos
+- **ApplicationDbContext**: `DYPStore/Data/ApplicationDbContext.cs` - Contexto EF Core
+- **DbInitializer**: `DYPStore/Data/DbInitializer.cs` - Inicialización de BD y datos semilla
+- **Modelos**: `DYPStore/Models/` (todos los .cs files)
+  - ApplicationUser: `DYPStore/Models/ApplicationUser.cs`
+  - Product: `DYPStore/Models/Product.cs`
+  - CartItem: `DYPStore/Models/CartItem.cs`
+  - Order/OrderItem: `DYPStore/Models/Order.cs` y `OrderItem.cs`
+  - ChatLog: `DYPStore/Models/ChatLog.cs`
+  - FaceEnrollment: `DYPStore/Models/FaceEnrollment.cs`
+
+### Controladores
+- **HomeController**: `DYPStore/Controllers/HomeController.cs`
+- **ProductsController**: `DYPStore/Controllers/ProductsController.cs`
+- **CartController**: `DYPStore/Controllers/CartController.cs`
+- **OrdersController**: `DYPStore/Controllers/OrdersController.cs`
+- **AccountController**: `DYPStore/Controllers/AccountController.cs`
+- **FaceIdController**: `DYPStore/Controllers/FaceIdController.cs`
+- **ChatbotController**: `DYPStore/Controllers/ChatbotController.cs`
+- **DashboardController (Admin)**: `DYPStore/Areas/Admin/Controllers/DashboardController.cs`
+
+### Servicios
+- **ChatbotService**: `DYPStore/services/ChatbotService.cs`
+- **EmailSender**: `DYPStore/services/EmailSender.cs`
+- **IEmailSender**: `DYPStore/services/IEmailSender.cs`
+- **DatabaseSteward**: `DYPStore/services/DatabaseSteward.cs`
+
+### Vistas
+- **Layout Principal**: `DYPStore/Views/Shared/_Layout.cshtml`
+- **Home/Index**: `DYPStore/Views/Home/Index.cshtml`
+- **Account/**: `DYPStore/Views/Account/` (Login.cshtml, Register.cshtml, FaceLogin.cshtml, FaceEnroll.cshtml, etc.)
+- **Products/**: `DYPStore/Views/Products/Index.cshtml`, `Details.cshtml`
+- **Cart/Index**: `DYPStore/Views/Cart/Index.cshtml`
+- **Orders/Index**: `DYPStore/Views/Orders/Index.cshtml`
+- **Admin/**: `DYPStore/Views/Admin/` (Dashboard, Products, etc.)
+- **Shared/**: `DYPStore/Views/Shared/_Layout.cshtml`, `_ValidationScriptsPartial.cshtml`, `Error.cshtml`
+
+### Archivos Estáticos
+- **CSS**: `DYPStore/wwwroot/css/site.css`
+- **JavaScript**: `DYPStore/wwwroot/js/site.js`
+- **PWA Manifest**: `DYPStore/wwwroot/manifest.json`
+- **Service Worker**: `DYPStore/wwwroot/sw.js`
+- **Iconos PWA**: `DYPStore/wwwroot/icons/` (icon-192.png, icon-512.png)
+
+### Migraciones
+- **Carpeta Migraciones**: `DYPStore/Migrations/` (todos los archivos .cs)
+- **Script SQL**: `DYPStore/Database/DYPStore_Script.sql`
+
+### Otros
+- **Proyecto (.csproj)**: `DYPStore/DYPStore.csproj`
+- **Error Log**: `DYPStore/error_log.txt`
+- **Instrucciones UX**: `DYPStore/INSTRUCCIONES_UX.txt`
+- **README**: `DYPStore/README.md` (este archivo)
+
+---
+
+## 🏗️ Arquitectura del Proyecto
+
 ## 🏗️ Arquitectura del Proyecto
 
 ### Estructura de Directorios
@@ -43,6 +110,10 @@ DYPStore/
 ## ⚙️ Configuración y Setup
 
 ### 1. Configuración de Base de Datos
+
+**Archivos involucrados:**
+- **appsettings.json**: `DYPStore/appsettings.json` - Cadenas de conexión
+- **DatabaseSteward.cs**: `DYPStore/services/DatabaseSteward.cs` - Lógica de failover
 
 **Archivo:** `appsettings.json`
 
@@ -74,7 +145,7 @@ DYPStore/
 
 ### 2. Inicialización de la Aplicación
 
-**Archivo:** `Program.cs`
+**Archivo:** `Program.cs` (`DYPStore/Program.cs`)
 
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
@@ -109,7 +180,7 @@ using (var scope = app.Services.CreateScope()) {
 
 ### 3. Inicialización de Base de Datos
 
-**Archivo:** `Data/DbInitializer.cs`
+**Archivo:** `Data/DbInitializer.cs` (`DYPStore/Data/DbInitializer.cs`)
 
 - Crea roles: "Admin", "User"
 - Crea usuario admin por defecto
@@ -145,10 +216,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 ### Modelos Principales
 
 #### ApplicationUser (`Models/ApplicationUser.cs`)
+**Ubicación:** `DYPStore/Models/ApplicationUser.cs`
 - Extiende `IdentityUser`
 - Campo adicional: `FullName`
 
 #### Product (`Models/Product.cs`)
+**Ubicación:** `DYPStore/Models/Product.cs`
 ```csharp
 public class Product
 {
@@ -164,18 +237,24 @@ public class Product
 ```
 
 #### CartItem (`Models/CartItem.cs`)
+**Ubicación:** `DYPStore/Models/CartItem.cs`
 - Relación uno-a-muchos con User
 - Cantidad y referencia a Product
 
 #### Order & OrderItem (`Models/Order.cs`, `Models/OrderItem.cs`)
+**Ubicaciones:** 
+- `DYPStore/Models/Order.cs`
+- `DYPStore/Models/OrderItem.cs`
 - Estados de orden: `Pending`, `Processing`, `Shipped`, `Delivered`, `Cancelled`
 - OrderItem vincula productos con cantidades específicas
 
 #### ChatLog (`Models/ChatLog.cs`)
+**Ubicación:** `DYPStore/Models/ChatLog.cs`
 - Registra conversaciones del chatbot
 - Vinculado opcionalmente a usuario
 
 #### FaceEnrollment (`Models/FaceEnrollment.cs`)
+**Ubicación:** `DYPStore/Models/FaceEnrollment.cs`
 ```csharp
 public class FaceEnrollment
 {
@@ -197,29 +276,35 @@ public class FaceEnrollment
 ### Controladores Principales
 
 #### HomeController (`Controllers/HomeController.cs`)
+**Ubicación:** `DYPStore/Controllers/HomeController.cs`
 - Página de inicio con productos destacados
 - Manejo de errores y acceso denegado
 
 #### ProductsController (`Controllers/ProductsController.cs`)
+**Ubicación:** `DYPStore/Controllers/ProductsController.cs`
 - Lista productos con filtros por categoría
 - Vista de detalle de producto
 - Integración con carrito
 
 #### CartController (`Controllers/CartController.cs`)
+**Ubicación:** `DYPStore/Controllers/CartController.cs`
 - Gestión del carrito de compras
 - Agregar/quitar productos
 - Checkout básico
 
 #### OrdersController (`Controllers/OrdersController.cs`)
+**Ubicación:** `DYPStore/Controllers/OrdersController.cs`
 - Historial de pedidos del usuario
 - Detalles de orden específica
 
 #### AccountController (`Controllers/AccountController.cs`)
+**Ubicación:** `DYPStore/Controllers/AccountController.cs`
 - Login/logout/register estándar
 - Reset password con email
 - Integración con Face ID
 
 #### FaceIdController (`Controllers/FaceIdController.cs`)
+**Ubicación:** `DYPStore/Controllers/FaceIdController.cs`
 - **GET /Account/FaceLogin**: Página de login facial
 - **GET /Account/FaceEnroll**: Página de registro facial (requiere auth)
 - **POST /api/faceid/enroll**: Registra descriptor facial
@@ -228,13 +313,14 @@ public class FaceEnrollment
 - **GET /api/faceid/status**: Estado del registro facial
 
 #### ChatbotController (`Controllers/ChatbotController.cs`)
+**Ubicación:** `DYPStore/Controllers/ChatbotController.cs`
 - **POST /api/chatbot/ask**: Procesa preguntas del usuario
 - Integra con OpenAI API
 - Registra conversaciones en ChatLog
 
 ### Área de Administración
 
-**Archivo:** `Areas/Admin/Controllers/DashboardController.cs`
+**Archivo:** `Areas/Admin/Controllers/DashboardController.cs` (`DYPStore/Areas/Admin/Controllers/DashboardController.cs`)
 
 - **Index**: Dashboard con estadísticas
 - **Products**: CRUD completo de productos
@@ -248,7 +334,7 @@ public class FaceEnrollment
 
 ### Layout Principal
 
-**Archivo:** `Views/Shared/_Layout.cshtml`
+**Archivo:** `Views/Shared/_Layout.cshtml` (`DYPStore/Views/Shared/_Layout.cshtml`)
 
 - Bootstrap 5 para responsive design
 - Navegación con autenticación
@@ -257,28 +343,50 @@ public class FaceEnrollment
 
 ### Vistas de Cuenta
 
-- **Login/Register**: Formularios estándar con validación
-- **FaceLogin**: Interfaz para reconocimiento facial
-- **FaceEnroll**: Registro de biometría con webcam
+**Ubicaciones:**
+- **Login/Register**: `DYPStore/Views/Account/` (Login.cshtml, Register.cshtml, etc.)
+- **FaceLogin**: `DYPStore/Views/Account/FaceLogin.cshtml` - Interfaz para reconocimiento facial
+- **FaceEnroll**: `DYPStore/Views/Account/FaceEnroll.cshtml` - Registro de biometría con webcam
+- **ForgotPassword**: `DYPStore/Views/Account/ForgotPassword.cshtml`
+- **ResetPassword**: `DYPStore/Views/Account/ResetPassword.cshtml`
 
 ### Vistas de Producto
 
-- **Index**: Grid de productos con filtros
-- **Details**: Información detallada + agregar al carrito
+**Ubicaciones:**
+- **Index**: `DYPStore/Views/Products/Index.cshtml` - Grid de productos con filtros
+- **Details**: `DYPStore/Views/Products/Details.cshtml` - Información detallada + agregar al carrito
+
+### Vistas de Carrito y Pedidos
+
+**Ubicaciones:**
+- **Cart/Index**: `DYPStore/Views/Cart/Index.cshtml` - Gestión del carrito
+- **Orders/Index**: `DYPStore/Views/Orders/Index.cshtml` - Historial de pedidos
 
 ### Área Admin
 
-- Dashboard con métricas
-- CRUD de productos con imágenes
-- Gestión de pedidos
-- Lista de usuarios
-- Historial de chat
+**Ubicaciones:** `DYPStore/Views/Admin/` 
+- Dashboard: `Index.cshtml`
+- Products: `Products/Index.cshtml`, `Products/Create.cshtml`, etc.
+- Orders: `Orders/Index.cshtml`
+- Users: `Users/Index.cshtml`
+- ChatLogs: `ChatLogs/Index.cshtml`
+
+### Vistas Compartidas
+
+**Ubicaciones:** `DYPStore/Views/Shared/`
+- `_Layout.cshtml` - Layout principal
+- `_ValidationScriptsPartial.cshtml` - Scripts de validación
+- `Error.cshtml` - Página de errores
+- `_ViewImports.cshtml` - Imports de Razor
+- `_ViewStart.cshtml` - Configuración de vistas
 
 ---
 
 ## 🤖 Servicios de IA y Utilidades
 
 ### ChatbotService (`services/ChatbotService.cs`)
+
+**Ubicación:** `DYPStore/services/ChatbotService.cs`
 
 ```csharp
 public class ChatbotService
@@ -302,9 +410,23 @@ public class ChatbotService
 
 ### EmailSender (`services/EmailSender.cs`)
 
+**Ubicación:** `DYPStore/services/EmailSender.cs`
+
 - Implementa `IEmailSender` de ASP.NET Identity
 - Envía emails de reset password
 - Configurado con Gmail SMTP
+
+### IEmailSender Interface
+
+**Ubicación:** `DYPStore/services/IEmailSender.cs`
+
+### DatabaseSteward (`services/DatabaseSteward.cs`)
+
+**Ubicación:** `DYPStore/services/DatabaseSteward.cs`
+
+- Gestiona failover automático entre Supabase (primario) y Neon (secundario)
+- Timeout de 2.5s para detectar fallos
+- Valida cadenas de conexión antes de usarlas
 
 ---
 
@@ -327,14 +449,45 @@ public class ChatbotService
    - Vinculado a UserId con CASCADE delete
    - UserAgent para auditoría
 
-### JavaScript Cliente
+### Componentes del Sistema Face ID
 
-**Archivo:** `wwwroot/js/site.js`
+#### Backend - FaceIdController
+**Ubicación:** `DYPStore/Controllers/FaceIdController.cs`
+- Endpoints API para enroll, verify, status, unenroll
+- Lógica de distancia euclidiana
+- Integración con UserManager y ApplicationDbContext
 
+#### Modelo de Datos - FaceEnrollment
+**Ubicación:** `DYPStore/Models/FaceEnrollment.cs`
+- Almacena descriptor facial (JSON de 128 floats)
+- Vinculado a ApplicationUser
+- Campos de auditoría (CreatedAt, UpdatedAt, UserAgent)
+
+#### Frontend - Vistas
+**Ubicaciones:**
+- **FaceLogin**: `DYPStore/Views/Account/FaceLogin.cshtml` - Página de login facial
+- **FaceEnroll**: `DYPStore/Views/Account/FaceEnroll.cshtml` - Página de registro facial
+
+#### JavaScript Cliente
+**Ubicación:** `DYPStore/wwwroot/js/site.js`
 - Inicializa face-api.js con modelos TinyFaceDetector + FaceRecognitionNet
 - Webcam access con getUserMedia
 - Canvas rendering para preview
 - API calls con fetch
+
+### Flujo de Autenticación Facial
+
+1. **Registro**:
+   - Usuario accede a `/Account/FaceEnroll` (requiere login)
+   - JavaScript captura 10+ frames con webcam
+   - Calcula descriptor promedio
+   - POST a `/api/faceid/enroll` → Guarda en FaceEnrollments
+
+2. **Login**:
+   - Usuario accede a `/Account/FaceLogin`
+   - Captura un frame
+   - POST a `/api/faceid/verify` → Compara con BD
+   - Si distancia < 0.42 → Autentica usuario
 
 ---
 
@@ -342,9 +495,12 @@ public class ChatbotService
 
 ### Archivos PWA
 
-- **wwwroot/manifest.json**: Metadatos de la app
-- **wwwroot/sw.js**: Service Worker para offline
-- **wwwroot/icons/**: Iconos 192x192 y 512x512
+**Ubicaciones:**
+- **Manifest**: `DYPStore/wwwroot/manifest.json` - Metadatos de la app
+- **Service Worker**: `DYPStore/wwwroot/sw.js` - Funcionalidad offline
+- **Iconos**: `DYPStore/wwwroot/icons/` 
+  - `icon-192.png` (192x192)
+  - `icon-512.png` (512x512)
 
 ### Características
 
@@ -357,14 +513,22 @@ public class ChatbotService
 
 ## 🗃️ Migraciones de Base de Datos
 
+### Ubicación de Migraciones
+
+**Carpeta:** `DYPStore/Migrations/`
+
 ### Migraciones Principales
 
-1. **InitialPostgres**: Esquema base con Identity
-2. **ActualizacionModelosCuentas**: Ajustes en modelos de usuario
-3. **UpdateAuthModels**: Más ajustes de autenticación
-4. **FixContext**: Correcciones en contexto
-5. **AddChatLog**: Tabla para historial de chat
-6. **AddFaceEnrollment**: Tabla para biometría facial
+1. **InitialPostgres**: `20260319055554_InitialPostgres.cs` - Esquema base con Identity
+2. **ActualizacionModelosCuentas**: `20260320073232_ActualizacionModelosCuentas.cs` - Ajustes en modelos de usuario
+3. **UpdateAuthModels**: `20260320073958_UpdateAuthModels.cs` - Más ajustes de autenticación
+4. **FixContext**: `20260320075158_FixContext.cs` - Correcciones en contexto
+5. **AddChatLog**: `20260514000000_AddChatLog.cs` - Tabla para historial de chat
+6. **AddFaceEnrollment**: `20260514000001_AddFaceEnrollment.cs` - Tabla para biometría facial
+
+### Script SQL
+
+**Ubicación:** `DYPStore/Database/DYPStore_Script.sql`
 
 ### Comando de Migración
 
@@ -421,6 +585,27 @@ Para producción, usar variables de entorno:
 - `AppSettings__AdminEmail`, etc.
 
 ---
+
+## 📁 Archivos Adicionales Importantes
+
+### Configuración y Logs
+- **Proyecto (.csproj)**: `DYPStore/DYPStore.csproj` - Dependencias y configuración del proyecto
+- **Error Log**: `DYPStore/error_log.txt` - Registro de errores de la aplicación
+- **Instrucciones UX**: `DYPStore/INSTRUCCIONES_UX.txt` - Guía de experiencia de usuario
+
+### Archivos Estáticos Detallados
+- **CSS Principal**: `DYPStore/wwwroot/css/site.css` - Estilos personalizados
+- **JavaScript Principal**: `DYPStore/wwwroot/js/site.js` - Lógica cliente (Face ID, etc.)
+
+### Área Admin Completa
+- **Controlador Admin**: `DYPStore/Areas/Admin/Controllers/DashboardController.cs`
+- **Vistas Admin**: `DYPStore/Areas/Admin/Views/` (Dashboard, Products, Orders, etc.)
+- **_ViewImports Admin**: `DYPStore/Areas/Admin/Views/_ViewImports.cshtml`
+- **_ViewStart Admin**: `DYPStore/Areas/Admin/Views/_ViewStart.cshtml`
+
+---
+
+## 🔧 Solución de Problemas
 
 ## 🔧 Solución de Problemas
 
