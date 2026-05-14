@@ -1,66 +1,87 @@
 @model DYPStore.Models.ViewModels.LoginViewModel
-@{ 
-    ViewData["Title"] = "Iniciar Sesión"; 
-    Layout = "_Layout"; 
+@{
+    ViewData["Title"] = "Iniciar Sesión";
+    Layout = "_Layout";
 }
 
-<div class="min-vh-80 d-flex align-items-center justify-content-center py-5">
-    <div class="w-100" style="max-width:440px;">
-        <div class="dyp-auth-card p-4 p-md-5 rounded-3 mx-3">
-            <div class="text-center mb-4">
-                <i class="bi bi-lightning-fill text-danger" style="font-size:2.5rem"></i>
-                <h2 class="fw-bold text-uppercase mt-2">Iniciar Sesión</h2>
-                <p class="text-secondary small">Ingresa a tu cuenta DYPStore</p>
+<div class="container py-4 py-md-5">
+    <div class="dyp-auth-split">
+        <aside class="dyp-auth-aside" style="background-image: url('https://images.unsplash.com/photo-1517438476312-10d79c077509?w=1400&q=85');">
+            <div>
+                <span class="dyp-hero-eyebrow"><i class="bi bi-stars"></i>Bienvenido de vuelta</span>
+                <h2>Tu próxima<br/>marca personal<br/>te espera.</h2>
+                <p>Accede a tu carrito guardado, sigue tus pedidos y descubre las recomendaciones que preparamos para tu disciplina.</p>
+                <div class="dyp-auth-aside-stats">
+                    <div class="stat"><strong>17+</strong><span>Productos</span></div>
+                    <div class="stat"><strong>3</strong><span>Disciplinas</span></div>
+                    <div class="stat"><strong>24/7</strong><span>Soporte</span></div>
+                </div>
             </div>
+        </aside>
 
-            <form asp-controller="Account" asp-action="Login" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" asp-for="ReturnUrl" />
-
-                <div asp-validation-summary="All" class="alert alert-danger py-2 small" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
-
-                <div class="mb-3">
-                    <label asp-for="Email" class="form-label text-secondary small text-uppercase fw-bold">Correo Electrónico</label>
-                    <input asp-for="Email" class="form-control dyp-input" placeholder="tu@correo.com" autocomplete="email" />
-                    <span asp-validation-for="Email" class="text-danger small"></span>
-                </div>
-
-                <div class="mb-4">
-                    <label asp-for="Password" class="form-label text-secondary small text-uppercase fw-bold">Contraseña</label>
-                    <input asp-for="Password" class="form-control dyp-input" placeholder="••••••••" autocomplete="current-password" />
-                    <span asp-validation-for="Password" class="text-danger small"></span>
-                </div>
-
-                <div class="d-flex align-items-center justify-content-between mb-4">
-                    <div class="form-check">
-                        <input asp-for="RememberMe" class="form-check-input" />
-                        <label asp-for="RememberMe" class="form-check-label text-secondary small cursor-pointer">Recordarme</label>
+        <div class="d-flex align-items-center justify-content-center px-3 px-md-5">
+            <div class="w-100" style="max-width: 440px;">
+                <div class="dyp-auth-card">
+                    <div class="text-center mb-4">
+                        <div class="dyp-logo fs-3 justify-content-center"><span class="dyp-logo-mark"><i class="bi bi-lightning-charge-fill"></i></span>DYP<span class="text-danger">Store</span></div>
+                        <h2 class="fw-bold mt-3 mb-1" style="font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; letter-spacing:.04em;">Iniciar Sesión</h2>
+                        <p class="text-secondary small mb-0">Ingresa para continuar tu compra</p>
                     </div>
-                    <a asp-controller="Account" asp-action="ForgotPassword" class="text-danger text-decoration-none small fw-bold">
-                        ¿Olvidaste tu clave?
-                    </a>
+
+                    <form asp-controller="Account" asp-action="Login" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="ReturnUrl" />
+
+                        <div asp-validation-summary="All" class="alert alert-danger py-2 small" style="display:@(ViewData.ModelState.IsValid ? "none" : "block")"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">Correo electrónico</label>
+                            <input asp-for="Email" class="form-control dyp-input" placeholder="tu@correo.com" autocomplete="email" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label">Contraseña</label>
+                            <input asp-for="Password" class="form-control dyp-input" placeholder="••••••••" autocomplete="current-password" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <div class="form-check">
+                                <input asp-for="RememberMe" class="form-check-input" />
+                                <label asp-for="RememberMe" class="form-check-label text-secondary small">Recordarme</label>
+                            </div>
+                            <a asp-controller="Account" asp-action="ForgotPassword" class="text-danger text-decoration-none small fw-semibold">¿Olvidaste tu clave?</a>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger w-100 btn-lg fw-bold mb-3">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Ingresar
+                        </button>
+
+                        <div class="d-flex align-items-center mb-3">
+                            <hr class="flex-grow-1 border-secondary opacity-25 m-0" />
+                            <span class="mx-3 text-secondary small text-uppercase" style="letter-spacing:.12em; font-size:.7rem;">O continuar con</span>
+                            <hr class="flex-grow-1 border-secondary opacity-25 m-0" />
+                        </div>
+
+                        <button type="button" onclick="iniciarSesionGoogle()" class="btn w-100 btn-lg fw-semibold d-flex align-items-center justify-content-center mb-2" style="background-color:#fff; color:#222; border:1px solid #e2e2e2; border-radius:14px;">
+                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width:22px; height:22px;" class="me-2" />
+                            Ingresar con Google
+                        </button>
+
+                        <!-- Face ID button -->
+                        <a href="/Account/FaceLogin" class="btn w-100 btn-lg fw-semibold d-flex align-items-center justify-content-center dyp-faceid-login-btn">
+                            <i class="bi bi-shield-lock-fill me-2" style="color:var(--dyp-red,#ff2d4d);"></i>
+                            Ingresar con Face ID
+                        </a>
+                    </form>
+
+                    <p class="text-center text-secondary small mt-4 mb-0">
+                        ¿No tienes cuenta?
+                        <a asp-controller="Account" asp-action="Register" class="text-danger text-decoration-none fw-bold">Crea una en segundos</a>
+                    </p>
                 </div>
-
-                <button type="submit" class="btn btn-danger w-100 btn-lg fw-bold mb-3">
-                    <i class="bi bi-box-arrow-in-right me-2"></i>Ingresar
-                </button>
-
-                <div class="d-flex align-items-center mb-3">
-                    <hr class="flex-grow-1 border-secondary m-0" />
-                    <span class="mx-3 text-secondary small text-uppercase">O continuar con</span>
-                    <hr class="flex-grow-1 border-secondary m-0" />
-                </div>
-
-                <button type="button" onclick="iniciarSesionGoogle()" class="btn w-100 btn-lg fw-bold d-flex align-items-center justify-content-center transition-all shadow-sm" style="background-color: white; color: #444; border: 1px solid #ddd;">
-                    <img src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" style="width: 24px; height: 24px;" class="me-2" />
-                    Ingresar con Google
-                </button>
-            </form>
-
-            <p class="text-center text-secondary small mt-4">
-                ¿No tienes cuenta?
-                <a asp-controller="Account" asp-action="Register" class="text-danger text-decoration-none fw-bold">Regístrate aquí</a>
-            </p>
+            </div>
         </div>
     </div>
 </div>
@@ -68,38 +89,33 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
-    <!-- CDN del SDK de Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@@supabase/supabase-js@2"></script>
     <script>
-        // ✅ Credenciales del proyecto Supabase correcto
         const SUPABASE_URL = 'https://gtsxiuursyviqzuayzvm.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd0c3hpdXVyc3l2aXF6dWF5enZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0MTAyNTYsImV4cCI6MjA4ODk4NjI1Nn0.8r2kRgGB4rRKmHD93yNZ6gTr8szERmuERDHGRxJd4Lk';
 
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Detectar cuando Supabase devuelve la sesión tras Google Login
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session) {
                 try {
-                    // Enviar token al backend de ASP.NET Core para crear la cookie de sesión
                     const response = await fetch('@Url.Action("SupabaseLoginSync", "Account")', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ accessToken: session.access_token })
                     });
-
                     if (response.ok) {
                         window.location.href = '@Url.Action("Index", "Home")';
                     } else {
                         const errorData = await response.text();
                         console.error("Backend error:", errorData);
-                        alert("No se pudo sincronizar la cuenta. Error: " + errorData);
+                        if (window.DYP) DYP.toast({ type: 'error', title: 'Sincronización fallida', message: errorData });
+                        else alert("No se pudo sincronizar la cuenta. Error: " + errorData);
                     }
                 } catch (error) {
                     console.error('Error de sincronización:', error);
-                    alert("No se pudo sincronizar la cuenta con el servidor. Revisa la consola.");
+                    if (window.DYP) DYP.toast({ type: 'error', title: 'Error', message: 'No se pudo sincronizar la cuenta con el servidor.' });
+                    else alert("No se pudo sincronizar la cuenta con el servidor.");
                 }
             }
         });
@@ -108,19 +124,17 @@
             try {
                 const { data, error } = await supabaseClient.auth.signInWithOAuth({
                     provider: 'google',
-                    options: {
-                        // Redirigir de vuelta a /Account/Login para que el listener reciba la sesión
-                        redirectTo: window.location.origin + '/Account/Login'
-                    }
+                    options: { redirectTo: window.location.origin + '/Account/Login' }
                 });
-
                 if (error) {
                     console.error("Error OAuth:", error.message);
-                    alert("Hubo un problema al iniciar sesión con Google: " + error.message);
+                    if (window.DYP) DYP.toast({ type: 'error', title: 'Error con Google', message: error.message });
+                    else alert("Hubo un problema al iniciar sesión con Google: " + error.message);
                 }
             } catch (error) {
                 console.error("Error al iniciar sesión con Google:", error.message);
-                alert("Hubo un problema al iniciar sesión. Revisa la consola.");
+                if (window.DYP) DYP.toast({ type: 'error', title: 'Error', message: 'Hubo un problema al iniciar sesión.' });
+                else alert("Hubo un problema al iniciar sesión.");
             }
         }
     </script>

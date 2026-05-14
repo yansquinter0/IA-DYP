@@ -3,6 +3,7 @@ using DYPStore.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 namespace DYPStore.Controllers
+
 {
     public class ProductsController : Controller
     {

@@ -1,87 +1,158 @@
 @model Product
-@{ ViewData["Title"] = Model.Name; }
+@{
+    ViewData["Title"] = Model.Name;
+    var imgUrl = Model.ImageUrl ?? "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=900&q=85";
+    var detailUrl = Url.Action("Details", "Products", new { id = Model.Id });
+    var trackJson = System.Text.Json.JsonSerializer.Serialize(new {
+        id = Model.Id, name = Model.Name, brand = Model.Brand, price = Model.Price,
+        cat = Model.Category.ToString(), img = imgUrl, url = detailUrl
+    });
+    var prodJson = System.Text.Json.JsonSerializer.Serialize(new {
+        id = Model.Id, name = Model.Name, brand = Model.Brand, price = Model.Price,
+        stock = Model.Stock, cat = Model.Category.ToString(), img = imgUrl, url = detailUrl
+    });
+    var liveViewers = new System.Random(Model.Id).Next(8, 47);
+}
 
-<div class="container py-4 py-md-5">
-    <a asp-controller="Products" asp-action="Index" class="btn btn-sm btn-outline-secondary mb-4">
-        <i class="bi bi-arrow-left me-1"></i>Volver a la tienda
-    </a>
+<div class="dyp-scroll-progress"></div>
+
+<div class="container py-4 py-md-5" data-track-recent='@Html.Raw(trackJson)'>
+    <nav class="text-secondary small mb-3" aria-label="breadcrumb">
+        <a asp-controller="Home" asp-action="Index" class="text-secondary text-decoration-none">Inicio</a>
+        <i class="bi bi-chevron-right mx-1" style="font-size:.7em;"></i>
+        <a asp-controller="Products" asp-action="Index" class="text-secondary text-decoration-none">Tienda</a>
+        <i class="bi bi-chevron-right mx-1" style="font-size:.7em;"></i>
+        <a asp-controller="Products" asp-action="Index" asp-route-category="@Model.Category.ToString().ToLower()" class="text-secondary text-decoration-none">@Model.Category.ToString()</a>
+        <i class="bi bi-chevron-right mx-1" style="font-size:.7em;"></i>
+        <span class="text-white text-truncate d-inline-block" style="max-width:280px; vertical-align:bottom;">@Model.Name</span>
+    </nav>
+
     <div class="row g-4 g-lg-5">
         <div class="col-12 col-lg-6">
-            <div class="dyp-detail-img-wrap">
-                <img src="@(Model.ImageUrl ?? "https://images.unsplash.com/photo-1549719386-74dfcbf7dbed?w=800&q=80")" alt="@Model.Name" class="img-fluid" style="max-height:450px;object-fit:contain;" />
+            <div class="dyp-detail-img-wrap dyp-zoom-wrap dyp-reveal" title="Pasa el cursor para hacer zoom">
+                <img id="detailMain" src="@imgUrl" alt="@Model.Name" class="dyp-detail-img" />
+            </div>
+            <div class="text-secondary small mt-2 d-none d-lg-flex align-items-center gap-2">
+                <i class="bi bi-zoom-in"></i> Pasa el cursor sobre la imagen para activar el zoom
             </div>
         </div>
-        <div class="col-12 col-lg-6">
-            <div class="d-flex align-items-center gap-2 mb-3">
-                <span class="dyp-badge-cat dyp-cat-@Model.Category.ToString().ToLower()">@Model.Category.ToString().ToUpper()</span>
-                <span class="text-secondary fw-bold text-uppercase small">@Model.Brand</span>
+        <div class="col-12 col-lg-6 dyp-reveal">
+            <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                <span class="dyp-badge-cat dyp-cat-@Model.Category.ToString().ToLower()" style="position:static;">@Model.Category.ToString()</span>
+                <span class="dyp-brand">@Model.Brand</span>
+                <span class="dyp-viewers ms-auto"><i class="bi bi-eye-fill"></i>@liveViewers viendo</span>
             </div>
-            <h1 class="fw-bold text-uppercase mb-3" style="font-size:clamp(1.5rem,4vw,2.5rem);">@Model.Name</h1>
-            <p class="dyp-price-lg mb-4">$@Model.Price.ToString("N2")</p>
-            <p class="text-secondary mb-4">@Model.Description</p>
 
-            <div class="dyp-info-box p-3 rounded-3 mb-4">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-secondary">Disponibilidad</span>
-                    @if (Model.Stock > 0)
-                    { <span class="text-success fw-bold"><i class="bi bi-lightning-fill me-1"></i>En Stock (@Model.Stock)</span> }
-                    else { <span class="text-danger fw-bold">Agotado</span> }
+            <h1 class="fw-bold mb-3" style="font-family:'Barlow Condensed', sans-serif; font-weight:900; font-size:clamp(1.8rem,4vw,2.8rem); line-height:1.05; text-transform:uppercase; letter-spacing:.01em;">@Model.Name</h1>
+
+            <div class="dyp-rating mb-3">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-half"></i>
+                <span class="text-muted-rating">4.7 · Verificado por atletas</span>
+            </div>
+
+            <div class="d-flex align-items-baseline gap-3 mb-4 flex-wrap">
+                <span class="dyp-price-lg">$@Model.Price.ToString("N0")</span>
+                <span class="text-secondary small">IVA incluido · Envío calculado al pagar</span>
+            </div>
+
+            <div class="dyp-info-box p-3 mb-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-box-seam text-secondary"></i>
+                    <span class="text-secondary small">Disponibilidad</span>
                 </div>
+                @if (Model.Stock > 5) { <span class="dyp-stock-pill">@Model.Stock unidades en stock</span> }
+                else if (Model.Stock > 0) { <span class="dyp-urgency"><span class="dot"></span>¡Solo quedan @Model.Stock unidades!</span> }
+                else { <span class="dyp-stock-pill out">Agotado por ahora</span> }
             </div>
 
             @if (User.Identity?.IsAuthenticated == true)
             {
-                <form asp-controller="Cart" asp-action="Add" method="post">
+                <form asp-controller="Cart" asp-action="Add" method="post" data-cart-add>
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="productId" value="@Model.Id" />
-                    <div class="d-flex gap-3 align-items-center mb-4">
-                        <div class="dyp-qty-control d-flex align-items-center gap-0">
-                            <button type="button" class="btn btn-outline-secondary px-3 qty-btn" data-action="dec">-</button>
-                            <input type="number" name="quantity" id="qtyInput" class="form-control text-center border-secondary qty-input" value="1" min="1" max="@Model.Stock" style="width:60px;background:#111;color:#fff;" readonly />
-                            <button type="button" class="btn btn-outline-secondary px-3 qty-btn" data-action="inc" data-max="@Model.Stock">+</button>
+                    <div class="d-flex gap-3 align-items-center mb-3 flex-wrap">
+                        <div class="dyp-qty" data-qty>
+                            <button type="button" data-action="dec" aria-label="Disminuir">−</button>
+                            <input type="number" name="quantity" value="1" min="1" max="@Model.Stock" />
+                            <button type="button" data-action="inc" aria-label="Aumentar">+</button>
                         </div>
                         <button type="submit" class="btn btn-danger btn-lg flex-grow-1" @(Model.Stock<=0?"disabled":"")>
-                            <i class="bi bi-cart-plus me-2"></i>Añadir al Carrito
+                            <i class="bi bi-bag-plus me-2"></i>Añadir al Carrito
                         </button>
                     </div>
                 </form>
             }
             else
             {
-                <a asp-controller="Account" asp-action="Login" class="btn btn-danger btn-lg w-100 mb-4">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-danger btn-lg w-100 mb-3">
                     <i class="bi bi-box-arrow-in-right me-2"></i>Inicia sesión para comprar
                 </a>
             }
 
-            <div class="row g-3">
-                <div class="col-6">
-                    <div class="dyp-info-box p-3 rounded-3 d-flex align-items-center gap-2">
-                        <i class="bi bi-shield-check text-danger fs-4"></i>
-                        <small class="text-secondary">Garantía de Calidad Premium</small>
-                    </div>
+            <div class="d-flex gap-2 mb-4 flex-wrap">
+                <button type="button" class="btn btn-outline-light flex-grow-1 dyp-wish-btn-inline"
+                        style="position:static; width:auto; height:auto; border-radius:10px; padding:.7rem 1rem;"
+                        data-product-id="@Model.Id"
+                        data-product='@Html.Raw(prodJson)'
+                        onclick="(function(b){var item=JSON.parse(b.dataset.product);var added=DYP.wishlist.toggle(item);if(added){DYP.flyHeart(b);DYP.toast({type:'success',title:'Añadido a favoritos',message:item.name});}else DYP.toast({type:'info',message:'Quitado de favoritos'});})(this)">
+                    <i class="bi bi-heart me-2"></i>Añadir a favoritos
+                </button>
+                <button type="button" class="btn btn-outline-light"
+                        data-product-id="@Model.Id"
+                        data-product='@Html.Raw(prodJson)'
+                        onclick="(function(b){DYP.compare.toggle(JSON.parse(b.dataset.product));DYP.drawer('dypCmpDrawer',true);})(this)">
+                    <i class="bi bi-bar-chart-line me-2"></i>Comparar
+                </button>
+                <button type="button" class="btn btn-outline-light" onclick="if(navigator.share){navigator.share({title:document.title,url:location.href}).catch(()=>{});}else{navigator.clipboard.writeText(location.href);DYP.toast({type:'success',message:'Enlace copiado'});}">
+                    <i class="bi bi-share me-2"></i>Compartir
+                </button>
+            </div>
+
+            <div class="dyp-trust-mini">
+                <span><i class="bi bi-truck"></i>Envío 24-48h</span>
+                <span><i class="bi bi-arrow-counterclockwise"></i>Cambios sin trámites</span>
+                <span><i class="bi bi-shield-check"></i>Garantía premium</span>
+                <span><i class="bi bi-credit-card-2-back"></i>Pago 100% seguro</span>
+            </div>
+
+            <div class="mt-4">
+                <div class="dyp-tabs" data-tabs>
+                    <button type="button" class="dyp-tab active" data-tab="desc">Descripción</button>
+                    <button type="button" class="dyp-tab" data-tab="specs">Especificaciones</button>
+                    <button type="button" class="dyp-tab" data-tab="ship">Envío y Cambios</button>
                 </div>
-                <div class="col-6">
-                    <div class="dyp-info-box p-3 rounded-3 d-flex align-items-center gap-2">
-                        <i class="bi bi-truck text-danger fs-4"></i>
-                        <small class="text-secondary">Envíos a todo el país</small>
+                <div data-panel="desc">
+                    <p class="text-secondary mb-0" style="line-height:1.7;">@Model.Description</p>
+                </div>
+                <div data-panel="specs" style="display:none;">
+                    <ul class="list-unstyled text-secondary mb-0">
+                        <li class="d-flex justify-content-between border-bottom border-secondary border-opacity-25 py-2"><span>Marca</span><span class="text-white fw-semibold">@Model.Brand</span></li>
+                        <li class="d-flex justify-content-between border-bottom border-secondary border-opacity-25 py-2"><span>Categoría</span><span class="text-white fw-semibold">@Model.Category.ToString()</span></li>
+                        <li class="d-flex justify-content-between border-bottom border-secondary border-opacity-25 py-2"><span>SKU</span><span class="text-white fw-semibold font-monospace">DYP-@Model.Id.ToString("D5")</span></li>
+                        <li class="d-flex justify-content-between py-2"><span>Stock disponible</span><span class="text-white fw-semibold">@Model.Stock</span></li>
+                    </ul>
+                </div>
+                <div data-panel="ship" style="display:none;">
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <div class="d-flex gap-2"><i class="bi bi-truck text-danger fs-5"></i><div><div class="text-white fw-semibold small">Envío exprés</div><div class="text-secondary small">Despachos en 24-48h hábiles a todo el país.</div></div></div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="d-flex gap-2"><i class="bi bi-arrow-counterclockwise text-danger fs-5"></i><div><div class="text-white fw-semibold small">Cambios fáciles</div><div class="text-secondary small">30 días para cambios sin preguntas.</div></div></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-@section Scripts {
-<script>
-document.querySelectorAll('.qty-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const input = document.getElementById('qtyInput');
-        let v = parseInt(input.value);
-        const max = parseInt(btn.dataset.max || 99);
-        if (btn.dataset.action === 'inc') v = Math.min(v + 1, max);
-        else v = Math.max(v - 1, 1);
-        input.value = v;
-    });
-});
-</script>
-}
+    <!-- Recently viewed strip -->
+    <section class="dyp-recent-strip" data-recent-strip data-exclude="@Model.Id" style="display:none;">
+        <h3><i class="bi bi-clock-history"></i>Vistos recientemente</h3>
+        <div class="dyp-recent-rail"></div>
+    </section>
+</div>

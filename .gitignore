@@ -198,6 +198,12 @@ publish/
 # in these scripts will be unencrypted
 PublishScripts/
 
+# Temporary local helper files
+.tmpdbcheck/
+migration_type_check.txt
+preprocessed.xml
+
+
 # NuGet Packages
 *.nupkg
 # NuGet Symbol Packages

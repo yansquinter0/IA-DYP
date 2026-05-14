@@ -1,0 +1,282 @@
+@{
+    ViewData["Title"] = "Registrar Face ID";
+    Layout = "_Layout";
+    bool isEnrolled = ViewBag.IsEnrolled == true;
+    int frameCount = ViewBag.FrameCount is int fc ? fc : 0;
+    DateTime? enrolledAt = ViewBag.EnrolledAt as DateTime?;
+}
+
+<div class="container py-4 py-md-5" style="max-width:760px;">
+    <div class="dyp-auth-card">
+        <div class="text-center mb-4">
+            <div class="dyp-logo fs-3 justify-content-center">
+                <span class="dyp-logo-mark"><i class="bi bi-lightning-charge-fill"></i></span>DYP<span class="text-danger">Store</span>
+            </div>
+            <h2 class="fw-bold mt-3 mb-1" style="font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; letter-spacing:.04em;">
+                <i class="bi bi-shield-lock-fill text-danger me-2"></i>Configurar Face ID
+            </h2>
+            <p class="text-secondary small mb-0">Registra tu biometría facial para un acceso rápido y seguro</p>
+        </div>
+
+        @if (isEnrolled)
+        {
+            <div class="alert alert-success py-3 mb-4">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-check-circle-fill fs-5"></i>
+                    <div>
+                        <strong>Face ID activo</strong><br/>
+                        <small class="opacity-75">
+                            @frameCount fotogramas · Registrado el @(enrolledAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mb-4">
+                <button type="button" id="reEnrollBtn" class="btn btn-outline-warning flex-grow-1">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Actualizar rostro
+                </button>
+                <button type="button" id="deleteBtn" class="btn btn-outline-danger">
+                    <i class="bi bi-trash3 me-1"></i>Eliminar
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-info py-3 mb-4">
+                <i class="bi bi-info-circle me-1"></i>
+                No tienes Face ID configurado. Registra tu rostro para acceder sin contraseña.
+            </div>
+        }
+
+        <!-- Camera area -->
+        <div class="dyp-faceid-wrap mb-3" id="faceWrap" style="@(isEnrolled ? "display:none;" : "")">
+            <video id="faceVideo" class="dyp-faceid-video" autoplay muted playsinline></video>
+            <canvas id="faceCanvas" class="dyp-faceid-canvas"></canvas>
+            <div class="dyp-faceid-overlay" id="faceOverlay">
+                <div class="dyp-faceid-ring" id="faceRing">
+                    <i class="bi bi-person-bounding-box"></i>
+                </div>
+                <div class="dyp-faceid-status" id="faceStatus">Carga de modelos...</div>
+            </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="dyp-faceid-progress mb-3" id="faceProgress" style="display:none;">
+            <div class="dyp-faceid-bar" id="faceBar"></div>
+        </div>
+
+        <!-- Instructions -->
+        <div id="enrollInstructions" class="dyp-chat-hint mb-3" style="@(isEnrolled ? "display:none;" : "")">
+            <strong>Instrucciones:</strong>
+            <ol class="mt-1 mb-0 ps-3 small">
+                <li>Coloca tu rostro frente a la cámara, bien iluminado.</li>
+                <li>El sistema capturará <strong>5 fotogramas</strong> automáticamente.</li>
+                <li>Mueve levemente la cabeza para mejorar la precisión.</li>
+                <li>El descriptor resultante se guarda de forma segura (128 valores numéricos, sin imagen).</li>
+            </ol>
+        </div>
+
+        <!-- Message area -->
+        <div id="faceMsg" class="alert py-2 small mb-3" style="display:none;"></div>
+
+        <!-- Action button -->
+        <button type="button" id="faceCamBtn" class="btn btn-danger w-100 btn-lg fw-bold mb-3" disabled style="@(isEnrolled ? "display:none;" : "")">
+            <i class="bi bi-camera-video me-2"></i>Iniciar registro biométrico
+        </button>
+
+        <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary w-100">
+            <i class="bi bi-arrow-left me-1"></i>Volver al inicio de sesión
+        </a>
+
+        <p class="text-center text-secondary mt-3 mb-0" style="font-size:.73rem;">
+            <i class="bi bi-lock-fill me-1"></i>Los datos biométricos se procesan localmente y solo se almacena un vector numérico cifrado. Nunca una foto.
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    const MODEL_URL    = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';
+    const ENROLL_URL   = '/api/faceid/enroll';
+    const UNENROLL_URL = '/api/faceid/unenroll';
+
+    const video    = document.getElementById('faceVideo');
+    const canvas   = document.getElementById('faceCanvas');
+    const ring     = document.getElementById('faceRing');
+    const statusEl = document.getElementById('faceStatus');
+    const camBtn   = document.getElementById('faceCamBtn');
+    const faceMsg  = document.getElementById('faceMsg');
+    const progress = document.getElementById('faceProgress');
+    const bar      = document.getElementById('faceBar');
+    const faceWrap = document.getElementById('faceWrap');
+    const instructions = document.getElementById('enrollInstructions');
+
+    let stream = null;
+    let detecting = false;
+    let modelsLoaded = false;
+
+    // Re-enroll & delete buttons
+    document.getElementById('reEnrollBtn')?.addEventListener('click', () => {
+        document.getElementById('reEnrollBtn').closest('.d-flex').style.display = 'none';
+        faceWrap.style.display = '';
+        camBtn.style.display = '';
+        instructions.style.display = '';
+        faceWrap.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('deleteBtn')?.addEventListener('click', async () => {
+        if (!confirm('¿Eliminar tu Face ID? Tendrás que volver a registrarte para usarlo.')) return;
+        try {
+            const res = await fetch(UNENROLL_URL, { method: 'DELETE' });
+            const data = await res.json();
+            if (res.ok) { showMsg(data.message, 'success'); setTimeout(() => location.reload(), 1200); }
+            else showMsg(data.error || 'Error al eliminar.', 'danger');
+        } catch (e) { showMsg('Error de conexión.', 'danger'); }
+    });
+
+    // ── Load models ────────────────────────────────────────────────────
+    async function loadModels() {
+        setStatus('Cargando modelos de IA...', 'secondary');
+        try {
+            await Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+                faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+                faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+            ]);
+            modelsLoaded = true;
+            setStatus('Modelos listos. Pulsa el botón para iniciar.', 'success');
+            if (camBtn) camBtn.disabled = false;
+        } catch (e) {
+            setStatus('Error cargando modelos. Recarga la página.', 'danger');
+        }
+    }
+
+    // ── Camera ─────────────────────────────────────────────────────────
+    camBtn?.addEventListener('click', async () => {
+        if (!modelsLoaded) return;
+        if (stream) { stopCamera(); return; }
+
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
+            video.srcObject = stream;
+            camBtn.innerHTML = '<i class="bi bi-stop-circle me-2"></i>Cancelar';
+            setStatus('Coloca tu rostro dentro del círculo y mantén quieto...', 'info');
+            ring.classList.add('scanning');
+            video.addEventListener('loadedmetadata', startDetection, { once: true });
+        } catch (e) {
+            showMsg('No se pudo acceder a la cámara. Verifica los permisos del navegador.', 'danger');
+        }
+    });
+
+    function stopCamera() {
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        video.srcObject = null;
+        detecting = false;
+        ring.classList.remove('scanning', 'detected', 'success', 'error');
+        camBtn.innerHTML = '<i class="bi bi-camera-video me-2"></i>Iniciar registro biométrico';
+        setStatus('Modelos listos. Pulsa el botón para iniciar.', 'success');
+    }
+
+    function startDetection() {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        sampledDescriptors = [];
+        detecting = true;
+        detectLoop();
+    }
+
+    let sampledDescriptors = [];
+    const SAMPLES_NEEDED = 5;
+
+    async function detectLoop() {
+        if (!detecting) return;
+
+        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+        const result  = await faceapi.detectSingleFace(video, options)
+                                     .withFaceLandmarks(true)
+                                     .withFaceDescriptor();
+
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (result) {
+            ring.classList.add('detected');
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 2;
+            const box = result.detection.box;
+            ctx.strokeRect(box.x, box.y, box.width, box.height);
+
+            sampledDescriptors.push(Array.from(result.descriptor));
+            const pct = Math.min(100, Math.round((sampledDescriptors.length / SAMPLES_NEEDED) * 100));
+            progress.style.display = 'block';
+            bar.style.width = pct + '%';
+            setStatus(`Capturando fotograma ${sampledDescriptors.length}/${SAMPLES_NEEDED}...`, 'info');
+
+            if (sampledDescriptors.length >= SAMPLES_NEEDED) {
+                detecting = false;
+                ring.classList.remove('detected', 'scanning');
+                ring.classList.add('success');
+                setStatus('Fotogramas capturados. Guardando...', 'success');
+                await enrollFace();
+                return;
+            }
+        } else {
+            ring.classList.remove('detected');
+            setStatus('Acerca tu rostro a la cámara...', 'warning');
+        }
+
+        if (detecting) requestAnimationFrame(detectLoop);
+    }
+
+    async function enrollFace() {
+        // Average all descriptors
+        const avg = new Array(128).fill(0);
+        for (const d of sampledDescriptors) {
+            for (let i = 0; i < 128; i++) avg[i] += d[i];
+        }
+        for (let i = 0; i < 128; i++) avg[i] /= sampledDescriptors.length;
+
+        try {
+            const res = await fetch(ENROLL_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ descriptor: avg, frameCount: sampledDescriptors.length })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                showMsg('✅ ' + data.message, 'success');
+                setStatus('Face ID registrado correctamente.', 'success');
+                stopCamera();
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                showMsg(data.error || 'Error al guardar.', 'danger');
+                setStatus('Error. Intenta de nuevo.', 'danger');
+                stopCamera();
+            }
+        } catch (e) {
+            showMsg('Error de conexión.', 'danger');
+            stopCamera();
+        }
+    }
+
+    function setStatus(msg, type) {
+        if (statusEl) { statusEl.textContent = msg; statusEl.className = 'dyp-faceid-status text-' + type; }
+    }
+
+    function showMsg(msg, type) {
+        faceMsg.textContent = msg;
+        faceMsg.className = 'alert alert-' + type + ' py-2 small mb-3';
+        faceMsg.style.display = 'block';
+        setTimeout(() => { faceMsg.style.display = 'none'; }, 5000);
+    }
+
+    loadModels();
+})();
+</script>
+}

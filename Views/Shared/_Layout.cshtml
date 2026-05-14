@@ -1,61 +1,216 @@
+@{
+    var currentSearch = Context.Request.Query["search"].ToString();
+}
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - DYPStore</title>
+    <meta name="theme-color" content="#07070a" />
+    <title>@ViewData["Title"] · DYPStore — Equipamiento Deportivo Premium</title>
+    <script>
+        (function(){
+            try {
+                var t = JSON.parse(localStorage.getItem('dypx_theme')) || 'dark';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch(e){}
+        })();
+    </script>
+    <link rel="manifest" href="~/manifest.json" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <!-- ===== DYPSTORE INTRO SCREEN — CSS ===== -->
+    <style>
+        #dypstore-intro {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+            overflow: hidden;
+        }
+
+        /* Canvas de rayas de luz — cubre toda la pantalla */
+        #dyp-intro-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Contenedor del logo con clip para el reveal */
+        .dyp-intro-wrap {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: dypLogoAnim 4.4s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+
+        /* Barra roja inicial */
+        .dyp-intro-bar {
+            position: absolute;
+            width: 10px;
+            height: 0;
+            background: #E50914;
+            border-radius: 2px;
+            animation: dypBarGrow 0.55s cubic-bezier(0.22,1,0.36,1) 0.1s forwards;
+            box-shadow: 0 0 30px 6px rgba(229,9,20,0.7);
+        }
+
+        /* Texto DYPStore */
+        .dyp-intro-logo {
+            font-family: 'Barlow Condensed', 'Arial Black', Arial, sans-serif;
+            font-weight: 900;
+            font-size: clamp(3.5rem, 12vw, 9rem);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            line-height: 1;
+            user-select: none;
+            white-space: nowrap;
+            clip-path: inset(0 100% 0 0);
+            animation: dypTextReveal 0.6s cubic-bezier(0.22,1,0.36,1) 0.7s forwards;
+            opacity: 0;
+        }
+        .dyp-intro-logo .dyp   { color: #E50914; }
+        .dyp-intro-logo .store { color: #FFFFFF; }
+
+        /* Fase 1: barra crece en altura */
+        @@keyframes dypBarGrow {
+            0%   { height: 0; opacity: 0; }
+            20%  { opacity: 1; }
+            100% { height: clamp(120px, 22vw, 200px); }
+        }
+
+        /* Fase 2: texto se revela de izquierda a derecha */
+        @@keyframes dypTextReveal {
+            0%   { clip-path: inset(0 100% 0 0); opacity: 1; }
+            100% { clip-path: inset(0 0%   0 0); opacity: 1; }
+        }
+
+        /* Fase 3+4: zoom explosivo + fade */
+        @@keyframes dypLogoAnim {
+            0%,  16%  { transform: scale(1);    opacity: 1; filter: blur(0px); }
+            50%        { transform: scale(1.04); opacity: 1; filter: blur(0px); }
+            68%        { transform: scale(1.12); opacity: 1; filter: blur(0px); }
+            82%        { transform: scale(2.8);  opacity: 0.6; filter: blur(3px); }
+            92%        { transform: scale(5.5);  opacity: 0;   filter: blur(10px); }
+            100%       { transform: scale(6);    opacity: 0;   filter: blur(12px); }
+        }
+
+        /* Fade final de toda la pantalla */
+        @@keyframes dypIntroFadeOut {
+            0%   { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; pointer-events: none; }
+        }
+
+        body.dyp-intro-active { overflow: hidden; }
+    </style>
 </head>
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark dyp-navbar sticky-top">
+<body class="dyp-intro-active" data-authenticated="@(User.Identity?.IsAuthenticated == true ? "true" : "false")" data-admin="@(User.IsInRole("Admin") ? "true" : "false")">
+
+<!-- ===== DYPSTORE INTRO SCREEN — HTML ===== -->
+<div id="dypstore-intro" role="presentation" aria-hidden="true">
+    <canvas id="dyp-intro-canvas"></canvas>
+    <div class="dyp-intro-wrap">
+        <div class="dyp-intro-bar"></div>
+        <span class="dyp-intro-logo">
+            <span class="dyp">DYP</span><span class="store">Store</span>
+        </span>
+    </div>
+</div>
+<nav class="navbar navbar-expand-lg dyp-navbar sticky-top">
     <div class="container">
         <a class="navbar-brand dyp-logo" asp-controller="Home" asp-action="Index">
-            <i class="bi bi-lightning-fill text-danger"></i> DYP<span class="text-danger">Store</span>
+            <span class="dyp-logo-mark"><i class="bi bi-lightning-charge-fill"></i></span>
+            DYP<span class="text-danger">Store</span>
         </a>
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
-            <span class="navbar-toggler-icon"></span>
+        <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" aria-label="Menú">
+            <i class="bi bi-list fs-3"></i>
         </button>
         <div class="collapse navbar-collapse" id="navMain">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
                 <li class="nav-item">
-                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString()=="Home"?"active":"")" asp-controller="Home" asp-action="Index">
-                        <i class="bi bi-house-door me-1"></i>Inicio
-                    </a>
+                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString()=="Home"?"active":"")" asp-controller="Home" asp-action="Index">Inicio</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString()=="Products"?"active":"")" asp-controller="Products" asp-action="Index">
-                        <i class="bi bi-grid me-1"></i>Tienda
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle @(ViewContext.RouteData.Values["controller"]?.ToString()=="Products"?"active":"")" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Tienda
                     </a>
+                    <ul class="dropdown-menu dyp-dropdown">
+                        <li><span class="dyp-dropdown-header">Categorías</span></li>
+                        <li><a class="dropdown-item" asp-controller="Products" asp-action="Index"><i class="bi bi-grid-3x3-gap me-2"></i>Todos los productos</a></li>
+                        <li><a class="dropdown-item" asp-controller="Products" asp-action="Index" asp-route-category="boxing"><i class="bi bi-shield-fill text-danger me-2"></i>Boxeo</a></li>
+                        <li><a class="dropdown-item" asp-controller="Products" asp-action="Index" asp-route-category="shoes"><i class="bi bi-lightning-charge text-primary me-2"></i>Tenis Deportivos</a></li>
+                        <li><a class="dropdown-item" asp-controller="Products" asp-action="Index" asp-route-category="supplements"><i class="bi bi-droplet-fill text-success me-2"></i>Suplementos</a></li>
+                    </ul>
                 </li>
                 @if (User.IsInRole("Admin"))
                 {
                     <li class="nav-item">
-                        <a class="nav-link text-warning" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
-                            <i class="bi bi-shield-lock-fill me-1"></i>Admin
+                        <a class="nav-link" asp-area="Admin" asp-controller="Dashboard" asp-action="Index">
+                            <i class="bi bi-shield-lock-fill text-warning me-1"></i>Admin
                         </a>
                     </li>
                 }
             </ul>
+
+            <form class="dyp-search-pill d-none d-lg-flex me-3" asp-controller="Products" asp-action="Index" method="get" role="search">
+                <i class="bi bi-search text-secondary me-2"></i>
+                <input type="search" name="search" placeholder="Buscar guantes, tenis, proteína... (presiona /)" value="@currentSearch" autocomplete="off" />
+                <button type="button" class="dyp-voice-btn" title="Buscar por voz" aria-label="Buscar por voz"><i class="bi bi-mic-fill"></i></button>
+                <button type="submit" aria-label="Buscar"><i class="bi bi-arrow-right"></i></button>
+            </form>
+
             <ul class="navbar-nav align-items-center gap-2">
+                <li class="nav-item">
+                    <button type="button" class="dyp-theme-toggle" title="Cambiar tema (T)" aria-label="Cambiar tema"><i class="bi bi-sun-fill"></i></button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="dyp-icon-btn" data-drawer-open="dypWishDrawer" title="Lista de deseos (W)" aria-label="Lista de deseos">
+                        <i class="bi bi-heart fs-5"></i>
+                    </button>
+                </li>
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <li class="nav-item">
-                        <a class="nav-link position-relative" asp-controller="Cart" asp-action="Index">
-                            <i class="bi bi-cart3 fs-5"></i>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Orders" asp-action="Index">
-                            <i class="bi bi-bag-check me-1"></i><span class="d-none d-lg-inline">Pedidos</span>
+                        <a class="dyp-icon-btn" asp-controller="Cart" asp-action="Index" aria-label="Carrito">
+                            <i class="bi bi-bag fs-5"></i>
+                            @{ var cartCount = ViewBag.CartItemCount as int?; }
+                            @if (cartCount.HasValue && cartCount.Value > 0)
+                            {
+                                <span class="dyp-cart-count">@cartCount.Value</span>
+                            }
                         </a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-person-circle me-1"></i><span class="d-none d-lg-inline">@User.Identity?.Name?.Split('@')[0]</span>
+                        <a class="dyp-icon-btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" style="text-decoration:none;" aria-expanded="false">
+                            <i class="bi bi-person fs-5"></i>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end dyp-dropdown">
+                        <ul class="dropdown-menu dropdown-menu-end dyp-dropdown" style="min-width:240px;">
+                            <li>
+                                <div class="px-2 py-2">
+                                    <div class="text-secondary small">Sesión activa</div>
+                                    <div class="fw-bold text-truncate" style="max-width:220px;">@User.Identity?.Name</div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider border-secondary opacity-25"/></li>
+                            <li><a class="dropdown-item" asp-controller="Orders" asp-action="Index"><i class="bi bi-bag-check me-2"></i>Mis Pedidos</a></li>
+                            <li><a class="dropdown-item" asp-controller="Cart" asp-action="Index"><i class="bi bi-bag me-2"></i>Mi Carrito</a></li>
+                            <li><a class="dropdown-item" href="#" data-drawer-open="dypWishDrawer"><i class="bi bi-heart me-2"></i>Mis Favoritos</a></li>
+                            <li><a class="dropdown-item" href="/Account/FaceEnroll"><i class="bi bi-shield-lock-fill me-2 text-danger"></i>Configurar Face ID</a></li>
+                            <li><a class="dropdown-item" href="#" data-kbd-open><i class="bi bi-keyboard me-2"></i>Atajos de teclado</a></li>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <li><a class="dropdown-item" asp-area="Admin" asp-controller="Dashboard" asp-action="Index"><i class="bi bi-shield-lock me-2"></i>Panel Admin</a></li>
+                            }
+                            <li><hr class="dropdown-divider border-secondary opacity-25"/></li>
                             <li>
                                 <form asp-controller="Account" asp-action="Logout" method="post" onsubmit="Object.keys(localStorage).forEach(k => { if(k.startsWith('sb-')) localStorage.removeItem(k); });">
                                     @Html.AntiForgeryToken()
@@ -69,8 +224,8 @@
                 }
                 else
                 {
-                    <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login"><i class="bi bi-box-arrow-in-right me-1"></i>Ingresar</a></li>
-                    <li class="nav-item"><a class="btn btn-danger btn-sm px-3" asp-controller="Account" asp-action="Register">Registro</a></li>
+                    <li class="nav-item"><a class="nav-link" asp-controller="Account" asp-action="Login">Ingresar</a></li>
+                    <li class="nav-item"><a class="btn btn-danger btn-sm px-3" asp-controller="Account" asp-action="Register">Crear cuenta</a></li>
                 }
             </ul>
         </div>
@@ -79,53 +234,393 @@
 
 @if (TempData["Success"] != null)
 {
-    <div class="alert alert-success alert-dismissible fade show m-0 rounded-0" role="alert" style="background:#1a3a1a;color:#6fcf6f;">
-        <div class="container"><i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]</div>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
-    </div>
+    <div class="alert alert-success" style="display:none;">@TempData["Success"]</div>
 }
 @if (TempData["Error"] != null)
 {
-    <div class="alert alert-danger alert-dismissible fade show m-0 rounded-0" role="alert" style="background:#3a1a1a;color:#eb5757;">
-        <div class="container"><i class="bi bi-exclamation-circle-fill me-2"></i>@TempData["Error"]</div>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
-    </div>
+    <div class="alert alert-danger" style="display:none;">@TempData["Error"]</div>
 }
 
 <main>@RenderBody()</main>
 
-<footer class="dyp-footer mt-5">
-    <div class="container py-5">
-        <div class="row g-4">
-            <div class="col-12 col-md-4">
-                <div class="dyp-logo fs-4 mb-3"><i class="bi bi-lightning-fill text-danger"></i> DYP<span class="text-danger">Store</span></div>
-                <p class="text-secondary small">Tu destino definitivo para equipamiento de boxeo, calzado deportivo de alto rendimiento y suplementos premium.</p>
+<footer class="dyp-footer">
+    <div class="container">
+        <div class="row g-4 g-lg-5">
+            <div class="col-12 col-md-5">
+                <div class="dyp-logo fs-4 mb-3">
+                    <span class="dyp-logo-mark"><i class="bi bi-lightning-charge-fill"></i></span>
+                    DYP<span class="text-danger">Store</span>
+                </div>
+                <p class="text-secondary" style="max-width:340px;">Equipamiento de boxeo, calzado deportivo de alto rendimiento y suplementos premium para atletas que no se conforman con menos.</p>
+                <div class="footer-social">
+                    <a href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                    <a href="#" aria-label="TikTok"><i class="bi bi-tiktok"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                    <a href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                </div>
             </div>
-            <div class="col-6 col-md-4">
-                <h6 class="text-uppercase fw-bold mb-3 text-light">Categorías</h6>
-                <ul class="list-unstyled small">
-                    <li class="mb-2"><a asp-controller="Products" asp-action="Index" asp-route-category="boxing" class="text-secondary text-decoration-none"><i class="bi bi-shield-fill me-1 text-danger"></i>Boxeo</a></li>
-                    <li class="mb-2"><a asp-controller="Products" asp-action="Index" asp-route-category="shoes" class="text-secondary text-decoration-none"><i class="bi bi-lightning me-1 text-primary"></i>Tenis Deportivos</a></li>
-                    <li class="mb-2"><a asp-controller="Products" asp-action="Index" asp-route-category="supplements" class="text-secondary text-decoration-none"><i class="bi bi-droplet-fill me-1 text-success"></i>Suplementos</a></li>
+            <div class="col-6 col-md-3">
+                <h6>Categorías</h6>
+                <ul class="list-unstyled">
+                    <li><a asp-controller="Products" asp-action="Index" asp-route-category="boxing">Boxeo</a></li>
+                    <li><a asp-controller="Products" asp-action="Index" asp-route-category="shoes">Tenis Deportivos</a></li>
+                    <li><a asp-controller="Products" asp-action="Index" asp-route-category="supplements">Suplementos</a></li>
+                    <li><a asp-controller="Products" asp-action="Index">Ver todo</a></li>
                 </ul>
             </div>
-            <div class="col-6 col-md-4">
-                <h6 class="text-uppercase fw-bold mb-3 text-light">Soporte</h6>
-                <ul class="list-unstyled small">
-                    <li class="mb-2"><a href="#" class="text-secondary text-decoration-none">Contacto</a></li>
-                    <li class="mb-2"><a href="#" class="text-secondary text-decoration-none">Envíos</a></li>
-                    <li class="mb-2"><a href="#" class="text-secondary text-decoration-none">Devoluciones</a></li>
+            <div class="col-6 col-md-2">
+                <h6>Soporte</h6>
+                <ul class="list-unstyled">
+                    <li><a href="#">Contacto</a></li>
+                    <li><a href="#">Envíos</a></li>
+                    <li><a href="#">Devoluciones</a></li>
+                    <li><a href="#" data-kbd-open>Atajos teclado</a></li>
+                </ul>
+            </div>
+            <div class="col-12 col-md-2">
+                <h6>Empresa</h6>
+                <ul class="list-unstyled">
+                    <li><a href="#">Sobre nosotros</a></li>
+                    <li><a href="#">Tiendas físicas</a></li>
+                    <li><a href="#">Carreras</a></li>
                 </ul>
             </div>
         </div>
-        <hr class="border-secondary mt-4" />
-        <p class="text-center text-secondary small mb-0">&copy; @DateTime.Now.Year DYPStore. Todos los derechos reservados.</p>
+        <div class="dyp-footer-bottom">
+            &copy; @DateTime.Now.Year DYPStore. Todos los derechos reservados. · Hecho con pasión por el deporte.
+        </div>
     </div>
 </footer>
+
+<!-- ================== UX INNOVATIONS PACK ================== -->
+
+<!-- Floating wishlist quick button -->
+<button type="button" class="dyp-floating-wish" id="dypFloatingWish" aria-label="Lista de deseos">
+    <i class="bi bi-heart-fill"></i>
+    <span class="count">0</span>
+</button>
+
+<!-- Comparison floating bar -->
+<div class="dyp-compare-bar" id="dypCompareBar">
+    <span class="label"><i class="bi bi-bar-chart-line me-1"></i>Comparar<span class="count">0</span></span>
+    <div class="actions">
+        <button type="button" class="btn-mini clear">Limpiar</button>
+        <button type="button" class="btn-mini open">Comparar ahora <i class="bi bi-arrow-right ms-1"></i></button>
+    </div>
+</div>
+
+<!-- Drawer backdrop (shared) -->
+<div class="dyp-drawer-backdrop" id="dypDrawerBackdrop"></div>
+
+<!-- Wishlist drawer -->
+<aside class="dyp-drawer" id="dypWishDrawer" aria-label="Lista de deseos">
+    <div class="dyp-drawer-header">
+        <h3 class="dyp-drawer-title"><i class="bi bi-heart-fill text-danger"></i>Lista de Deseos <span class="badge" id="dypWishCount">0</span></h3>
+        <button type="button" class="dyp-drawer-close" data-drawer-close="dypWishDrawer" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="dyp-drawer-body" id="dypWishBody"></div>
+    <div class="dyp-drawer-footer">
+        <a asp-controller="Products" asp-action="Index" class="btn btn-outline-light w-100"><i class="bi bi-arrow-right me-2"></i>Seguir explorando productos</a>
+    </div>
+</aside>
+
+<!-- Comparison drawer -->
+<aside class="dyp-drawer" id="dypCmpDrawer" aria-label="Comparar productos">
+    <div class="dyp-drawer-header">
+        <h3 class="dyp-drawer-title"><i class="bi bi-bar-chart-line text-primary"></i>Comparar Productos</h3>
+        <button type="button" class="dyp-drawer-close" data-drawer-close="dypCmpDrawer" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+    </div>
+    <div class="dyp-drawer-body" id="dypCmpBody"></div>
+</aside>
+
+<!-- Quick view modal -->
+<div class="dyp-modal-backdrop" id="dypQuickViewBackdrop">
+    <div class="dyp-modal" role="dialog" aria-label="Vista rápida">
+        <button type="button" class="dyp-modal-close" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+        <div class="dyp-modal-img"></div>
+        <div class="dyp-modal-body">
+            <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                <span data-qv-cat class="dyp-badge-cat"></span>
+                <span data-qv-brand class="dyp-brand"></span>
+            </div>
+            <h2 data-qv-name style="font-family:'Barlow Condensed', sans-serif; font-weight:900; font-size:clamp(1.4rem, 3vw, 2rem); text-transform:uppercase; line-height:1.05;"></h2>
+            <div class="dyp-rating mb-2"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-half"></i><span class="text-muted-rating">4.7</span></div>
+            <div class="d-flex align-items-baseline gap-3 mb-3">
+                <span data-qv-price class="dyp-price-lg"></span>
+                <span data-qv-stock></span>
+            </div>
+            <p data-qv-desc class="text-secondary mb-4" style="line-height:1.6;"></p>
+            <div class="dyp-viewers mb-3"><i class="bi bi-eye-fill"></i><span id="dypQvViewers">12</span> personas viendo este producto</div>
+            <a data-qv-detail href="#" class="btn btn-danger btn-lg w-100"><i class="bi bi-arrow-right me-2"></i>Ver detalle completo</a>
+        </div>
+    </div>
+</div>
+
+<!-- Voice search overlay -->
+<div class="dyp-voice-overlay" id="dypVoiceOverlay" role="dialog" aria-label="Búsqueda por voz">
+    <div class="dyp-voice-card">
+        <div class="dyp-voice-mic"><i class="bi bi-mic-fill"></i></div>
+        <h4 class="text-white mb-2" style="font-family:'Barlow Condensed', sans-serif; font-weight:800; text-transform:uppercase; letter-spacing:.04em;">Te escucho</h4>
+        <p class="text-secondary mb-3">Di lo que buscas, por ejemplo: "guantes de boxeo"</p>
+        <div id="dypVoiceTranscript" class="text-white fs-5 fw-semibold" style="min-height:2em;"></div>
+        <div class="text-secondary small mt-3">Toca cualquier parte para cerrar</div>
+    </div>
+</div>
+
+<!-- Keyboard shortcuts modal -->
+<div class="dyp-kbd-modal-backdrop" id="dypKbdModal">
+    <div class="dyp-kbd-modal" role="dialog" aria-label="Atajos de teclado">
+        <div class="d-flex align-items-center justify-content-between">
+            <h3 class="dyp-drawer-title mb-0"><i class="bi bi-keyboard text-danger"></i>Atajos de teclado</h3>
+            <button type="button" class="dyp-drawer-close" onclick="DYP.closeShortcuts()" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button>
+        </div>
+        <p class="text-secondary small mb-0 mt-1">Acelera tu navegación</p>
+        <div class="dyp-kbd-list">
+            <div class="dyp-kbd-row"><span class="desc">Buscar</span><span class="keys"><span class="dyp-kbd-key">/</span></span></div>
+            <div class="dyp-kbd-row"><span class="desc">Abrir lista de deseos</span><span class="keys"><span class="dyp-kbd-key">W</span></span></div>
+            <div class="dyp-kbd-row"><span class="desc">Abrir comparación</span><span class="keys"><span class="dyp-kbd-key">C</span></span></div>
+            <div class="dyp-kbd-row"><span class="desc">Cambiar tema (claro/oscuro)</span><span class="keys"><span class="dyp-kbd-key">T</span></span></div>
+            <div class="dyp-kbd-row"><span class="desc">Ir al inicio</span><span class="keys"><span class="dyp-kbd-key">H</span></span></div>
+            <div class="dyp-kbd-row"><span class="desc">Cerrar diálogos</span><span class="keys"><span class="dyp-kbd-key">Esc</span></span></div>
+            <div class="dyp-kbd-row"><span class="desc">Mostrar este menú</span><span class="keys"><span class="dyp-kbd-key">?</span></span></div>
+        </div>
+    </div>
+</div>
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
+
+<!-- ===== DYPSTORE INTRO SCREEN — JS ===== -->
+<script>
+(function () {
+    var intro  = document.getElementById('dypstore-intro');
+    var body   = document.body;
+    var TOTAL  = 5000; // duración total en ms
+
+    // ── Solo una vez por sesión ──────────────────────────────────────────
+    if (sessionStorage.getItem('dypIntroShown')) {
+        intro.style.display = 'none';
+        body.classList.remove('dyp-intro-active');
+        return;
+    }
+    sessionStorage.setItem('dypIntroShown', '1');
+
+    // ── Canvas de rayas de luz (estilo Netflix 2019) ─────────────────────
+    var canvas = document.getElementById('dyp-intro-canvas');
+    var ctx    = canvas.getContext('2d');
+    var W, H, rafId, streaks = [];
+    var streakPhase = false;   // se activa en el momento del zoom explosivo
+
+    function resize() {
+        W = canvas.width  = window.innerWidth;
+        H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+
+    // Colores del espectro Netflix (rojo, naranja, verde, azul, cyan…)
+    var COLORS = [
+        '#E50914','#ff4500','#ff6a00',
+        '#ff0080','#b22222',
+        '#00c853','#1de9b6',
+        '#2979ff','#00b0ff','#40c4ff',
+        '#aa00ff','#d500f9',
+        '#ffd600','#ffab00',
+        '#fff','#f44336'
+    ];
+
+    function makeStreak() {
+        var x     = (Math.random() * 1.4 - 0.2) * W;
+        var color = COLORS[(Math.random() * COLORS.length) | 0];
+        return {
+            x:      x,
+            w:      0.5 + Math.random() * 2.5,
+            speed:  2 + Math.random() * 6,
+            alpha:  0.15 + Math.random() * 0.85,
+            color:  color,
+            glow:   Math.random() > 0.5,
+            life:   0,
+            maxLife: 40 + Math.random() * 80
+        };
+    }
+
+    function drawStreaks(progress) {
+        ctx.clearRect(0, 0, W, H);
+        if (!streakPhase) return;
+
+        // Añadir nuevas rayas gradualmente
+        var density = Math.min(1, progress) * 5;
+        for (var i = 0; i < density; i++) {
+            if (Math.random() < 0.35) streaks.push(makeStreak());
+        }
+
+        streaks.forEach(function(s) {
+            s.life++;
+            var fade = s.life < 8
+                ? s.life / 8
+                : s.life > s.maxLife * 0.75
+                    ? 1 - (s.life - s.maxLife * 0.75) / (s.maxLife * 0.25)
+                    : 1;
+            var a = s.alpha * fade * Math.min(1, progress * 1.4);
+
+            if (s.glow) {
+                var grd = ctx.createLinearGradient(s.x, 0, s.x + s.w * 4, H);
+                grd.addColorStop(0, 'transparent');
+                grd.addColorStop(0.3, hexAlpha(s.color, a * 0.4));
+                grd.addColorStop(0.5, hexAlpha(s.color, a));
+                grd.addColorStop(0.7, hexAlpha(s.color, a * 0.4));
+                grd.addColorStop(1,   'transparent');
+                ctx.fillStyle = grd;
+                ctx.fillRect(s.x - s.w * 2, 0, s.w * 6, H);
+            }
+
+            ctx.globalAlpha = a;
+            ctx.fillStyle   = s.color;
+            ctx.fillRect(s.x, 0, s.w, H);
+            ctx.globalAlpha = 1;
+        });
+
+        // Eliminar rayas viejas
+        streaks = streaks.filter(function(s) { return s.life < s.maxLife; });
+    }
+
+    function hexAlpha(hex, a) {
+        var r = parseInt(hex.slice(1,3)||'ff', 16);
+        var g = parseInt(hex.slice(3,5)||'00', 16);
+        var b = parseInt(hex.slice(5,7)||'00', 16);
+        return 'rgba('+r+','+g+','+b+','+a.toFixed(3)+')';
+    }
+
+    var startTime = null;
+    function tick(ts) {
+        if (!startTime) startTime = ts;
+        var elapsed  = ts - startTime;
+        var streakProgress = Math.max(0, (elapsed - 2800) / 1400); // empieza a los 2.8s
+        drawStreaks(streakProgress);
+        rafId = requestAnimationFrame(tick);
+    }
+    rafId = requestAnimationFrame(tick);
+
+    // Activar fase de rayas en el momento del zoom explosivo
+    setTimeout(function() { streakPhase = true; }, 2800);
+
+    // Fade-out final de toda la pantalla
+    setTimeout(function() {
+        intro.style.animation = 'dypIntroFadeOut 0.6s ease forwards';
+    }, TOTAL - 650);
+
+    // Ocultar completamente al terminar
+    setTimeout(function() {
+        cancelAnimationFrame(rafId);
+        intro.style.display = 'none';
+        body.classList.remove('dyp-intro-active');
+    }, TOTAL);
+
+    // ── Sonido Ta-Dum (Web Audio API) ────────────────────────────────────
+    function buildTaDum(ac) {
+        var comp = ac.createDynamicsCompressor();
+        comp.threshold.value = -12;
+        comp.ratio.value     = 6;
+        comp.connect(ac.destination);
+
+        function note(type, f0, f1, vol, dur, t) {
+            var osc  = ac.createOscillator();
+            var gain = ac.createGain();
+            osc.type = type;
+            osc.frequency.setValueAtTime(f0, t);
+            osc.frequency.exponentialRampToValueAtTime(f1, t + dur * 0.85);
+            gain.gain.setValueAtTime(0, t);
+            gain.gain.linearRampToValueAtTime(vol, t + 0.014);
+            gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            osc.connect(gain); gain.connect(comp);
+            osc.start(t); osc.stop(t + dur + 0.05);
+        }
+
+        var now = ac.currentTime + 0.08;
+        note('sine',     390, 105, 0.82, 0.22, now);
+        note('triangle', 290,  90, 0.28, 0.18, now);
+        var t2 = now + 0.40;
+        note('sine',      76,  36, 1.00, 0.95, t2);
+        note('sine',     152,  72, 0.30, 0.60, t2);
+        note('triangle', 230,  95, 0.18, 0.40, t2);
+    }
+
+    function playTaDum() {
+        try {
+            var AC = window.AudioContext || window.webkitAudioContext;
+            if (!AC) return;
+            var ac = new AC();
+            if (ac.state === 'running') {
+                buildTaDum(ac);
+                setTimeout(function(){ try{ ac.close(); }catch(e){} }, 3000);
+            } else {
+                var played = false;
+                var evts   = ['click','touchstart','keydown','scroll','mousemove'];
+                function onFirst() {
+                    if (played) return; played = true;
+                    evts.forEach(function(e){ document.removeEventListener(e, onFirst, true); });
+                    ac.resume().then(function(){
+                        buildTaDum(ac);
+                        setTimeout(function(){ try{ ac.close(); }catch(e){} }, 3000);
+                    });
+                }
+                evts.forEach(function(e){ document.addEventListener(e, onFirst, { capture:true, once:true }); });
+            }
+        } catch(e) {}
+    }
+
+    playTaDum();
+})();
+</script>
+
+<!-- ============================================================
+     DYPSTORE — CHATBOT IA WIDGET
+     ============================================================ -->
+
+<!-- Floating chat button -->
+<button type="button" id="dypChatFab" class="dyp-chatbot-fab" aria-label="Abrir asistente IA" title="Asistente IA DYPStore">
+    <i class="bi bi-lightning-charge-fill icon-chat"></i>
+    <i class="bi bi-x-lg icon-close"></i>
+</button>
+
+<!-- Chat panel -->
+<div id="dypChatPanel" class="dyp-chatbot-panel" role="dialog" aria-label="Asistente de DYPStore">
+    <!-- Header -->
+    <div class="dyp-chatbot-header">
+        <div class="dyp-chatbot-header-icon"><i class="bi bi-lightning-charge-fill"></i></div>
+        <div class="dyp-chatbot-header-info">
+            <strong>Asistente DYPStore</strong>
+            <small>En línea</small>
+        </div>
+        @if (User.IsInRole("Admin"))
+        {
+            <span class="dyp-chatbot-role-badge admin">Admin</span>
+        }
+        else if (User.Identity?.IsAuthenticated == true)
+        {
+            <span class="dyp-chatbot-role-badge user">User</span>
+        }
+    </div>
+
+    <!-- Messages -->
+    <div id="dypChatMessages" class="dyp-chatbot-messages"></div>
+
+    <!-- Quick chips -->
+    <div id="dypChatChips" class="dyp-chatbot-chips"></div>
+
+    <!-- Input area -->
+    <div class="dyp-chatbot-input-area">
+        <input id="dypChatInput" type="text" placeholder="Escribe o usa el micrófono..." maxlength="500" autocomplete="off" />
+        <button type="button" id="dypChatVoiceBtn" class="dyp-chat-voice-btn" title="Dictar mensaje" aria-label="Dictar mensaje">
+            <i class="bi bi-mic-fill"></i>
+        </button>
+        <button type="button" id="dypChatSendBtn" class="dyp-chat-send-btn" aria-label="Enviar">
+            <i class="bi bi-send-fill"></i>
+        </button>
+    </div>
+</div>
+
 </body>
 </html>

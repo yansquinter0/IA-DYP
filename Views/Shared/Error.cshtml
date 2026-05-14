@@ -1,16 +1,12 @@
-@{
-    ViewData["Title"] = "Error";
-}
+@{ ViewData["Title"] = "Error"; }
 
-<div class="container d-flex flex-column align-items-center justify-content-center" style="min-height: 60vh; padding: 60px 20px;">
-    <div class="text-center">
-        <div style="font-size: 5rem; line-height: 1;">⚠️</div>
-        <h1 class="display-4 fw-bold text-danger mt-3">Algo salió mal</h1>
-        <p class="text-secondary fs-5 mt-2 mb-4">
-            Ocurrió un error inesperado. Por favor, inténtalo de nuevo en unos momentos.
-        </p>
-        <a asp-controller="Home" asp-action="Index" class="btn btn-danger btn-lg px-5 rounded-pill">
-            <i class="bi bi-house-fill me-2"></i>Volver al inicio
-        </a>
+<div class="container d-flex flex-column align-items-center justify-content-center" style="min-height: 70vh; padding: 60px 20px;">
+    <div class="text-center" style="max-width: 480px;">
+        <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width:96px; height:96px; border-radius:50%; background:rgba(255,45,77,.14);">
+            <i class="bi bi-exclamation-octagon-fill text-danger" style="font-size:2.8rem"></i>
+        </div>
+        <h1 class="display-5 fw-bold text-danger" style="font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; letter-spacing:.02em;">Algo salió mal</h1>
+        <p class="text-secondary fs-5 mt-2 mb-4">Ocurrió un error inesperado. Por favor, inténtalo de nuevo en unos momentos.</p>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-danger btn-lg px-4"><i class="bi bi-house-fill me-2"></i>Volver al inicio</a>
     </div>
 </div>

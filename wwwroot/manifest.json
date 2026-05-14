@@ -1,0 +1,32 @@
+{
+  "name": "DYPStore — Equipamiento Deportivo Premium",
+  "short_name": "DYPStore",
+  "description": "Boxeo, calzado deportivo y suplementos para atletas que no se conforman con menos.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#07070a",
+  "theme_color": "#07070a",
+  "lang": "es",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Boxeo", "url": "/Products?category=boxing" },
+    { "name": "Tenis", "url": "/Products?category=shoes" },
+    { "name": "Suplementos", "url": "/Products?category=supplements" },
+    { "name": "Mi carrito", "url": "/Cart" }
+  ]
+}
