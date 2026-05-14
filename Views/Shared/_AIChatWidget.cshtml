@@ -1,0 +1,730 @@
+<div id="ai-chat-widget-root"></div>
+
+<script>
+    class FuturisticChatWidget {
+        constructor(config = {}) {
+            this.config = {
+                webhook: {
+                    url: config.webhook?.url || '/api/chat',
+                    route: config.webhook?.route || 'general'
+                },
+                style: {
+                    primaryColor: '#FF4C4C',
+                    secondaryColor: '#FF6B6B',
+                    backgroundColor: '#0A0A0A',
+                    surfaceColor: '#1A1A1A',
+                    textColor: '#FFFFFF',
+                    textSecondaryColor: '#B0B0B0',
+                    ...config.style
+                },
+                initialMessage: config.initialMessage || '👋 Hola, soy el DYP de la IA. Estoy listo para contestate a cualquier pregunta. Sueltelaaaaa!!!'
+            };
+           
+            this.isOpen = false;
+            this.isTyping = false;
+            this.messages = [];
+            this.init();
+        }
+
+        init() {
+            this.createShadowRoot();
+            this.injectStyles();
+            this.createWidget();
+            this.bindEvents();
+            this.addInitialMessage();
+            this.loadConversation();
+        }
+
+        createShadowRoot() {
+            const container = document.getElementById('ai-chat-widget-root');
+            this.shadowRoot = container.attachShadow({ mode: 'closed' });
+        }
+
+        injectStyles() {
+            const styles = `
+                <style>
+                    @@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+                   
+                    * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                    }
+
+                    .ai-chat-widget {
+                        font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+                        position: fixed;
+                        bottom: 20px;
+                        right: 20px;
+                        z-index: 999999;
+                        color: ${this.config.style.textColor};
+                    }
+
+                    .ai-chat-button {
+                        width: 60px;
+                        height: 60px;
+                        border-radius: 50%;
+                        background: linear-gradient(135deg, ${this.config.style.primaryColor}, ${this.config.style.secondaryColor});
+                        border: none;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 24px;
+                        color: white;
+                        box-shadow: 0 4px 20px rgba(255, 76, 76, 0.3);
+                        transition: all 0.3s ease;
+                        position: relative;
+                        overflow: hidden;
+                    }
+
+                    .ai-chat-button::before {
+                        content: '';
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1));
+                        opacity: 0;
+                        transition: opacity 0.3s ease;
+                    }
+
+                    .ai-chat-button:hover {
+                        transform: scale(1.1);
+                        box-shadow: 0 6px 30px rgba(255, 76, 76, 0.5);
+                    }
+
+                    .ai-chat-button:hover::before {
+                        opacity: 1;
+                    }
+
+                    .ai-chat-button.pulse {
+                        animation: pulse 2s infinite;
+                    }
+
+                    @@keyframes pulse {
+                        0% { box-shadow: 0 4px 20px rgba(255, 76, 76, 0.3); }
+                        50% { box-shadow: 0 6px 30px rgba(255, 76, 76, 0.6); }
+                        100% { box-shadow: 0 4px 20px rgba(255, 76, 76, 0.3); }
+                    }
+
+                    .ai-chat-container {
+                        position: fixed;
+                        bottom: 90px;
+                        right: 20px;
+                        width: 380px;
+                        max-width: calc(100vw - 40px);
+                        height: min(500px, calc(100vh - 120px));
+                        max-height: calc(100vh - 120px);
+                        z-index: 999998;
+                        background: ${this.config.style.backgroundColor};
+                        border: 1px solid #333;
+                        border-radius: 16px;
+                        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+                        display: none;
+                        flex-direction: column;
+                        overflow: hidden;
+                        backdrop-filter: blur(10px);
+                        transform: translateY(20px);
+                        opacity: 0;
+                        transition: all 0.3s ease;
+                    }
+
+                    .ai-chat-container.show {
+                        display: flex;
+                        transform: translateY(0);
+                        opacity: 1;
+                    }
+
+                    .ai-chat-header {
+                        background: linear-gradient(135deg, ${this.config.style.surfaceColor}, #2A2A2A);
+                        padding: 20px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        border-bottom: 1px solid #333;
+                        position: relative;
+                    }
+
+                    .ai-chat-header::after {
+                        content: '';
+                        position: absolute;
+                        bottom: 0;
+                        left: 0;
+                        right: 0;
+                        height: 1px;
+                        background: linear-gradient(90deg, transparent, ${this.config.style.primaryColor}, transparent);
+                    }
+
+                    .ai-chat-title {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                        font-weight: 600;
+                        font-size: 16px;
+                    }
+
+                    .ai-chat-status {
+                        width: 8px;
+                        height: 8px;
+                        background: #00FF41;
+                        border-radius: 50%;
+                        animation: statusBlink 2s infinite;
+                    }
+
+                    @@keyframes statusBlink {
+                        0%, 50% { opacity: 1; }
+                        51%, 100% { opacity: 0.3; }
+                    }
+
+                    .ai-chat-close {
+                        background: none;
+                        border: none;
+                        color: ${this.config.style.textSecondaryColor};
+                        font-size: 20px;
+                        cursor: pointer;
+                        width: 30px;
+                        height: 30px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 50%;
+                        transition: all 0.3s ease;
+                    }
+
+                    .ai-chat-close:hover {
+                        background: rgba(255, 76, 76, 0.2);
+                        color: ${this.config.style.primaryColor};
+                    }
+
+                    .ai-chat-messages {
+                        flex: 1;
+                        padding: 20px;
+                        overflow-y: auto;
+                        background: ${this.config.style.backgroundColor};
+                        display: flex;
+                        flex-direction: column;
+                        gap: 16px;
+                    }
+
+                    .ai-chat-messages::-webkit-scrollbar {
+                        width: 6px;
+                    }
+
+                    .ai-chat-messages::-webkit-scrollbar-track {
+                        background: ${this.config.style.surfaceColor};
+                    }
+
+                    .ai-chat-messages::-webkit-scrollbar-thumb {
+                        background: ${this.config.style.primaryColor};
+                        border-radius: 3px;
+                    }
+
+                    .ai-message {
+                        max-width: 85%;
+                        padding: 12px 16px;
+                        border-radius: 12px;
+                        font-size: 14px;
+                        line-height: 1.5;
+                        animation: messageSlide 0.3s ease;
+                        position: relative;
+                    }
+
+                    @@keyframes messageSlide {
+                        from {
+                            opacity: 0;
+                            transform: translateY(10px);
+                        }
+                        to {
+                            opacity: 1;
+                            transform: translateY(0);
+                        }
+                    }
+
+                    .ai-message.user {
+                        align-self: flex-end;
+                        background: linear-gradient(135deg, ${this.config.style.primaryColor}, ${this.config.style.secondaryColor});
+                        color: white;
+                        border-bottom-right-radius: 4px;
+                    }
+
+                    .ai-message.bot {
+                        align-self: flex-start;
+                        background: ${this.config.style.surfaceColor};
+                        border: 1px solid #333;
+                        border-bottom-left-radius: 4px;
+                    }
+
+                    .ai-message-time {
+                        font-size: 11px;
+                        color: ${this.config.style.textSecondaryColor};
+                        margin-top: 4px;
+                        opacity: 0.7;
+                    }
+
+                    .ai-typing-indicator {
+                        align-self: flex-start;
+                        background: ${this.config.style.surfaceColor};
+                        border: 1px solid #333;
+                        border-radius: 12px;
+                        padding: 12px 16px;
+                        display: flex;
+                        align-items: center;
+                        gap: 8px;
+                    }
+
+                    .ai-typing-dots {
+                        display: flex;
+                        gap: 4px;
+                    }
+
+                    .ai-typing-dot {
+                        width: 6px;
+                        height: 6px;
+                        background: ${this.config.style.primaryColor};
+                        border-radius: 50%;
+                        animation: typingDot 1.4s infinite;
+                    }
+
+                    .ai-typing-dot:nth-child(2) {
+                        animation-delay: 0.2s;
+                    }
+
+                    .ai-typing-dot:nth-child(3) {
+                        animation-delay: 0.4s;
+                    }
+
+                    @@keyframes typingDot {
+                        0%, 60%, 100% {
+                            transform: scale(1);
+                            opacity: 0.5;
+                        }
+                        30% {
+                            transform: scale(1.2);
+                            opacity: 1;
+                        }
+                    }
+
+                    .ai-chat-input-container {
+                        padding: 20px;
+                        background: ${this.config.style.surfaceColor};
+                        border-top: 1px solid #333;
+                        display: flex;
+                        gap: 12px;
+                        align-items: flex-end;
+                    }
+
+                    .ai-chat-input {
+                        flex: 1;
+                        background: ${this.config.style.backgroundColor};
+                        border: 1px solid #333;
+                        border-radius: 12px;
+                        padding: 12px 16px;
+                        color: ${this.config.style.textColor};
+                        font-size: 14px;
+                        font-family: inherit;
+                        resize: none;
+                        min-height: 44px;
+                        max-height: 120px;
+                        outline: none;
+                        transition: all 0.3s ease;
+                    }
+
+                    .ai-chat-input:focus {
+                        border-color: ${this.config.style.primaryColor};
+                        box-shadow: 0 0 0 3px rgba(255, 76, 76, 0.1);
+                    }
+
+                    .ai-chat-input::placeholder {
+                        color: ${this.config.style.textSecondaryColor};
+                    }
+
+                    .ai-chat-send {
+                        background: linear-gradient(135deg, ${this.config.style.primaryColor}, ${this.config.style.secondaryColor});
+                        border: none;
+                        border-radius: 12px;
+                        width: 44px;
+                        height: 44px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 16px;
+                        color: white;
+                        transition: all 0.3s ease;
+                        flex-shrink: 0;
+                    }
+
+                    .ai-chat-send:hover {
+                        transform: scale(1.05);
+                        box-shadow: 0 4px 12px rgba(255, 76, 76, 0.4);
+                    }
+
+                    .ai-chat-send:disabled {
+                        opacity: 0.5;
+                        cursor: not-allowed;
+                        transform: none;
+                    }
+
+                    /* Mobile Responsive */
+                    @@media (max-width: 768px) {
+                        .ai-chat-container {
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            width: 100%;
+                            height: 100%;
+                            border-radius: 0;
+                            border: none;
+                        }
+
+                        .ai-chat-button {
+                            bottom: 15px;
+                            right: 15px;
+                            width: 55px;
+                            height: 55px;
+                        }
+                    }
+
+                    /* Markdown Support */
+                    .ai-message strong {
+                        font-weight: 600;
+                    }
+
+                    .ai-message em {
+                        font-style: italic;
+                    }
+
+                    .ai-message a {
+                        color: ${this.config.style.primaryColor};
+                        text-decoration: none;
+                    }
+
+                    .ai-message a:hover {
+                        text-decoration: underline;
+                    }
+
+                    .ai-message ul, .ai-message ol {
+                        margin: 8px 0;
+                        padding-left: 20px;
+                    }
+
+                    .ai-message li {
+                        margin: 4px 0;
+                    }
+
+                    .ai-message code {
+                        background: rgba(255, 76, 76, 0.1);
+                        padding: 2px 6px;
+                        border-radius: 4px;
+                        font-family: 'Courier New', monospace;
+                        font-size: 13px;
+                    }
+
+                    .ai-message pre {
+                        background: rgba(255, 76, 76, 0.1);
+                        padding: 12px;
+                        border-radius: 8px;
+                        overflow-x: auto;
+                        margin: 8px 0;
+                    }
+
+                    .ai-message pre code {
+                        background: none;
+                        padding: 0;
+                    }
+                </style>
+            `;
+            this.shadowRoot.innerHTML = styles;
+        }
+
+        createWidget() {
+            const widget = document.createElement('div');
+            widget.className = 'ai-chat-widget';
+            widget.innerHTML = `
+                <button class="ai-chat-button pulse" id="ai-chat-button">
+                    🥊
+                </button>
+                <div class="ai-chat-container" id="ai-chat-container">
+                    <div class="ai-chat-header">
+                        <div class="ai-chat-title">
+                            <div class="ai-chat-status"></div>
+                            <span>DYP IA</span>
+                        </div>
+                        <button class="ai-chat-close" id="ai-chat-close">✕</button>
+                    </div>
+                    <div class="ai-chat-messages" id="ai-chat-messages"></div>
+                    <div class="ai-chat-input-container">
+                        <textarea class="ai-chat-input" id="ai-chat-input" placeholder="Escribe tu mensaje aquí..." rows="1"></textarea>
+                        <button class="ai-chat-send" id="ai-chat-send">➤</button>
+                    </div>
+                </div>
+            `;
+            this.shadowRoot.appendChild(widget);
+        }
+
+        bindEvents() {
+            const button = this.shadowRoot.getElementById('ai-chat-button');
+            const container = this.shadowRoot.getElementById('ai-chat-container');
+            const closeBtn = this.shadowRoot.getElementById('ai-chat-close');
+            const input = this.shadowRoot.getElementById('ai-chat-input');
+            const sendBtn = this.shadowRoot.getElementById('ai-chat-send');
+
+            button.addEventListener('click', () => this.toggleWidget());
+            closeBtn.addEventListener('click', () => this.closeWidget());
+            sendBtn.addEventListener('click', () => this.sendMessage());
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    if (e.shiftKey) {
+                        return; // Allow new line
+                    }
+                    e.preventDefault();
+                    this.sendMessage();
+                }
+            });
+
+            input.addEventListener('input', () => {
+                this.autoResizeTextarea(input);
+            });
+        }
+
+        toggleWidget() {
+            const button = this.shadowRoot.getElementById('ai-chat-button');
+            const container = this.shadowRoot.getElementById('ai-chat-container');
+           
+            if (this.isOpen) {
+                this.closeWidget();
+            } else {
+                this.openWidget();
+            }
+        }
+
+        openWidget() {
+            const button = this.shadowRoot.getElementById('ai-chat-button');
+            const container = this.shadowRoot.getElementById('ai-chat-container');
+           
+            button.style.display = 'none';
+            container.classList.add('show');
+            this.isOpen = true;
+           
+            // Focus input
+            setTimeout(() => {
+                const input = this.shadowRoot.getElementById('ai-chat-input');
+                input.focus();
+            }, 300);
+        }
+
+        closeWidget() {
+            const button = this.shadowRoot.getElementById('ai-chat-button');
+            const container = this.shadowRoot.getElementById('ai-chat-container');
+           
+            container.classList.remove('show');
+            setTimeout(() => {
+                button.style.display = 'flex';
+            }, 300);
+            this.isOpen = false;
+        }
+
+        autoResizeTextarea(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
+        addInitialMessage() {
+            this.addMessage('bot', this.config.initialMessage);
+        }
+
+        addMessage(sender, content, timestamp = null) {
+            const messagesContainer = this.shadowRoot.getElementById('ai-chat-messages');
+            const messageElement = document.createElement('div');
+            messageElement.className = `ai-message ${sender}`;
+           
+            const time = timestamp || new Date().toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const processedContent = this.processMarkdown(content);
+           
+            messageElement.innerHTML = `
+                <div>${processedContent}</div>
+                <div class="ai-message-time">${time}</div>
+            `;
+
+            messagesContainer.appendChild(messageElement);
+            this.scrollToBottom();
+
+            // Save message
+            this.messages.push({ sender, content, timestamp: time });
+            this.saveConversation();
+        }
+
+        processMarkdown(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>')
+                .replace(/\n\n/g, '<br><br>')
+                .replace(/\n/g, '<br>');
+        }
+
+        showTypingIndicator() {
+            if (this.isTyping) return;
+           
+            const messagesContainer = this.shadowRoot.getElementById('ai-chat-messages');
+            const typingElement = document.createElement('div');
+            typingElement.className = 'ai-typing-indicator';
+            typingElement.id = 'ai-typing-indicator';
+            typingElement.innerHTML = `
+                <div class="ai-typing-dots">
+                    <div class="ai-typing-dot"></div>
+                    <div class="ai-typing-dot"></div>
+                    <div class="ai-typing-dot"></div>
+                </div>
+                <span>El DYP está escribiendo...</span>
+            `;
+           
+            messagesContainer.appendChild(typingElement);
+            this.scrollToBottom();
+            this.isTyping = true;
+        }
+
+        hideTypingIndicator() {
+            const typingElement = this.shadowRoot.getElementById('ai-typing-indicator');
+            if (typingElement) {
+                typingElement.remove();
+                this.isTyping = false;
+            }
+        }
+
+        scrollToBottom() {
+            const messagesContainer = this.shadowRoot.getElementById('ai-chat-messages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        getChatId() {
+            let chatId = sessionStorage.getItem('ai-chat-id');
+            if (!chatId) {
+                chatId = 'chat_' + Math.random().toString(36).substr(2, 9);
+                sessionStorage.setItem('ai-chat-id', chatId);
+            }
+            return chatId;
+        }
+
+        async sendMessage() {
+            const input = this.shadowRoot.getElementById('ai-chat-input');
+            const sendBtn = this.shadowRoot.getElementById('ai-chat-send');
+            const message = input.value.trim();
+           
+            if (!message) return;
+
+            // Add user message
+            this.addMessage('user', message);
+           
+            // Clear input
+            input.value = '';
+            input.style.height = 'auto';
+           
+            // Disable send button
+            sendBtn.disabled = true;
+           
+            // Show typing indicator
+            this.showTypingIndicator();
+
+            try {
+                const response = await fetch(this.config.webhook.url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({
+                        chatId: this.getChatId(),
+                        message: message,
+                        route: this.config.webhook.route
+                    })
+                });
+
+                const data = await response.json();
+               
+                // Hide typing indicator
+                this.hideTypingIndicator();
+               
+                // Add bot response
+                const botMessage = data.message || 'Lo siento, no pude procesar tu mensaje en este momento.';
+                this.addMessage('bot', botMessage);
+               
+                if (data.redirectUrl) {
+                    setTimeout(() => {
+                        window.location.href = data.redirectUrl;
+                    }, 1500);
+                }
+               
+            } catch (error) {
+                console.error('Error:', error);
+                this.hideTypingIndicator();
+                this.addMessage('bot', '⚠️ Error de conexión. Por favor, inténtalo de nuevo.');
+            } finally {
+                sendBtn.disabled = false;
+                input.focus();
+            }
+        }
+
+        saveConversation() {
+            localStorage.setItem('ai-chat-conversation', JSON.stringify(this.messages));
+        }
+
+        loadConversation() {
+            const saved = localStorage.getItem('ai-chat-conversation');
+            if (saved) {
+                const messages = JSON.parse(saved);
+                // Clear messages container except initial message
+                const messagesContainer = this.shadowRoot.getElementById('ai-chat-messages');
+                messagesContainer.innerHTML = '';
+               
+                // Reload messages
+                messages.forEach(msg => {
+                    this.addMessageElement(msg.sender, msg.content, msg.timestamp);
+                });
+                this.messages = messages;
+            }
+        }
+
+        addMessageElement(sender, content, timestamp) {
+            const messagesContainer = this.shadowRoot.getElementById('ai-chat-messages');
+            const messageElement = document.createElement('div');
+            messageElement.className = `ai-message ${sender}`;
+           
+            const processedContent = this.processMarkdown(content);
+           
+            messageElement.innerHTML = `
+                <div>${processedContent}</div>
+                <div class="ai-message-time">${timestamp}</div>
+            `;
+
+            messagesContainer.appendChild(messageElement);
+        }
+    }
+
+    // Initialize the widget
+    window.ChatWidgetConfig = window.ChatWidgetConfig || {
+        webhook: {
+            url: '/api/chat',
+            route: 'general'
+        }
+    };
+
+    // Wait for DOM to be ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            new FuturisticChatWidget(window.ChatWidgetConfig);
+        });
+    } else {
+        new FuturisticChatWidget(window.ChatWidgetConfig);
+    }
+</script>
