@@ -12,12 +12,13 @@ namespace DYPStore.Data
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<ChatLog> ChatLogs { get; set; }
+        public DbSet<FaceEnrollment> FaceEnrollments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
 
-            // Evitar ciclos de cascada que rompen PostgreSQL
             builder.Entity<CartItem>()
                 .HasOne(c => c.User)
                 .WithMany(u => u.CartItems)
@@ -36,6 +37,25 @@ namespace DYPStore.Data
             builder.Entity<Product>()
                 .Property(p => p.Category)
                 .HasConversion<string>();
+
+            builder.Entity<ChatLog>()
+                .HasOne(c => c.User)
+                .WithMany()
+                .HasForeignKey(c => c.UserId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
+
+            builder.Entity<FaceEnrollment>()
+                .HasOne(f => f.User)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .IsRequired(true);
+
+            // One enrollment per user (unique index)
+            builder.Entity<FaceEnrollment>()
+                .HasIndex(f => f.UserId)
+                .IsUnique();
         }
     }
 }

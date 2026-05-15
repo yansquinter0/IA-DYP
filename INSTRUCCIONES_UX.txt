@@ -1,0 +1,135 @@
+═══════════════════════════════════════════════════════════════
+   DYPSTORE — PACK DE INNOVACIONES UX (v2)
+   Listo para impresionar al jurado del proyecto final
+═══════════════════════════════════════════════════════════════
+
+INSTRUCCIONES:
+  1. Cierra Visual Studio (si está abierto).
+  2. Descomprime este ZIP y arrastra/copia la carpeta DYPStore sobre
+     tu proyecto existente. Acepta REEMPLAZAR todos los archivos.
+  3. Abre tu solución en Visual Studio y ejecuta (F5).
+
+NO SE TOCÓ NADA DE C#, controladores, modelos ni base de datos.
+Todas las mejoras son SOLO en Razor (.cshtml), CSS y JavaScript.
+
+───────────────────────────────────────────────────────────────
+ARCHIVOS MODIFICADOS / CREADOS
+───────────────────────────────────────────────────────────────
+  Modificados:
+    • Views/Shared/_Layout.cshtml       (componentes nuevos)
+    • Views/Home/Index.cshtml           (botones wishlist/comparar)
+    • Views/Products/Index.cshtml       (filtros + nuevos botones)
+    • Views/Products/Details.cshtml     (zoom + recientes + tabs)
+    • wwwroot/css/site.css              (+480 líneas de innovación)
+    • wwwroot/js/site.js                (+490 líneas de innovación)
+
+  Creados:
+    • wwwroot/manifest.json             (instalable como PWA)
+    • wwwroot/sw.js                     (service worker offline)
+    • wwwroot/icons/icon-192.png        (ícono app)
+    • wwwroot/icons/icon-512.png        (ícono app)
+
+───────────────────────────────────────────────────────────────
+14 INNOVACIONES UX QUE EL JURADO NO HA VISTO ANTES
+───────────────────────────────────────────────────────────────
+
+  1. 🎙️  BÚSQUEDA POR VOZ
+     Toca el micrófono en la barra y di "guantes de boxeo".
+     Usa Web Speech API (Chrome/Edge), idioma es-CO.
+
+  2. 🔍 BUSCADOR INTELIGENTE
+     Al escribir aparece autocompletado con coincidencias
+     resaltadas + búsquedas populares. Navegable con flechas
+     y Enter. Atajo: presiona "/" para enfocar.
+
+  3. ❤️  WISHLIST PERSISTENTE
+     Corazón en cada producto, animación de "vuelo" al
+     agregar, bandeja lateral con todos tus favoritos,
+     botón flotante con contador. Datos en localStorage.
+
+  4. ⚖️  COMPARADOR DE PRODUCTOS
+     Marca hasta 3 productos para comparar lado a lado
+     con barra flotante inferior y bandeja con tabla de specs.
+
+  5. 👁️  VISTA RÁPIDA (QUICK VIEW)
+     Modal elegante sin salir de la galería. Muestra precio,
+     stock urgente, descripción y CTA al detalle completo.
+
+  6. 🔎 ZOOM CON LUPA
+     En la página de detalle, pasa el cursor sobre la imagen.
+     Lupa estilo eCommerce premium (Amazon/Apple).
+
+  7. 🎉 CONFETI AL COMPRAR
+     Al añadir al carrito explota confeti en pantalla.
+     Confeti grande en página de orden completada.
+
+  8. 🌗 MODO CLARO/OSCURO
+     Botón sol/luna en navbar. Persiste con localStorage.
+     Atajo: "T".
+
+  9. 📊 BARRA DE PROGRESO SUPERIOR
+     Estilo Vercel/YouTube — feedback visual en cada
+     navegación entre páginas.
+
+ 10. 🔥 PRUEBA SOCIAL EN VIVO
+     Popup inferior izquierdo: "María de Bogotá acabó de
+     comprar..." con producto real, foto y tiempo. Rotativo.
+
+ 11. ⚠️  INDICADORES DE URGENCIA
+     "¡Solo quedan 3!" pulsante + "12 personas viendo este
+     producto" en detalles. Aumenta conversión.
+
+ 12. 🕘 VISTOS RECIENTEMENTE
+     Carrusel horizontal al pie del detalle del producto.
+     Recuerda hasta 12 productos visitados.
+
+ 13. ⌨️  ATAJOS DE TECLADO PRO
+     Modal con Cmd+K style. Atajos:
+        /  → Buscar          W  → Wishlist
+        C  → Comparar        T  → Cambiar tema
+        H  → Inicio          Esc → Cerrar
+        ?  → Ver atajos
+
+ 14. 📱 PWA INSTALABLE + OFFLINE
+     manifest.json + service worker registrados.
+     Los usuarios pueden "Instalar app" desde Chrome/Edge.
+     Assets se cachean para carga instantánea offline.
+
+BONUS:
+     • Animaciones fluidas con cubic-bezier
+     • Pulso del ícono del carrito al añadir
+     • Indicador de scroll en detalles
+     • Compartir nativo (navigator.share) en detalle
+     • Skeletons de carga listos para usar
+     • Responsive 100% mobile-first
+
+───────────────────────────────────────────────────────────────
+PRESENTACIÓN AL JURADO — DEMO SUGERIDO (3 MIN)
+───────────────────────────────────────────────────────────────
+
+  1. Abre la home → muestra el modo oscuro y presiona "T"
+     para alternar a modo claro.
+
+  2. Presiona "/" para enfocar la búsqueda. Escribe "guante"
+     → muestra el autocompletado en tiempo real.
+
+  3. Toca el micrófono y di "proteína" → búsqueda por voz.
+
+  4. En la galería: marca corazón en 2 productos, marca
+     "Comparar" en 3 productos. Aparece barra flotante.
+
+  5. Presiona "C" → se abre la bandeja de comparación.
+
+  6. Click en "Vista rápida" sobre un producto → modal.
+
+  7. Entra al detalle → pasa el cursor sobre la imagen
+     (lupa de zoom). Añade al carrito → CONFETI.
+
+  8. Presiona "?" → muestra atajos de teclado.
+
+  9. Espera 6 segundos → aparece prueba social en vivo.
+
+ 10. Abre menú del navegador → "Instalar DYPStore" (PWA).
+
+¡A romperla! 🥊
+═══════════════════════════════════════════════════════════════

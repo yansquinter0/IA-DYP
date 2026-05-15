@@ -1,0 +1,280 @@
+@{
+    ViewData["Title"] = "Iniciar sesión con Face ID";
+    Layout = "_Layout";
+}
+
+<div class="container py-4 py-md-5">
+    <div class="dyp-auth-split">
+        <aside class="dyp-auth-aside" style="background-image: url('https://images.unsplash.com/photo-1535914254981-b5012eebbd15?w=1400&q=85');">
+            <div>
+                <span class="dyp-hero-eyebrow"><i class="bi bi-shield-lock-fill"></i>Biometría avanzada</span>
+                <h2>Tu rostro,<br/>tu contraseña.<br/>100% seguro.</h2>
+                <p>Accede a tu cuenta DYPStore usando reconocimiento facial avanzado con embeddings biométricos de alta precisión.</p>
+                <div class="dyp-auth-aside-stats">
+                    <div class="stat"><strong>128D</strong><span>Embeddings</span></div>
+                    <div class="stat"><strong>&lt;0.42</strong><span>Umbral</span></div>
+                    <div class="stat"><strong>0%</strong><span>Datos a terceros</span></div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="d-flex align-items-center justify-content-center px-3 px-md-5">
+            <div class="w-100" style="max-width: 480px;">
+                <div class="dyp-auth-card">
+                    <div class="text-center mb-4">
+                        <div class="dyp-logo fs-3 justify-content-center">
+                            <span class="dyp-logo-mark"><i class="bi bi-lightning-charge-fill"></i></span>DYP<span class="text-danger">Store</span>
+                        </div>
+                        <h2 class="fw-bold mt-3 mb-1" style="font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; letter-spacing:.04em;">Face ID</h2>
+                        <p class="text-secondary small mb-0">Reconocimiento facial avanzado</p>
+                    </div>
+
+                    <!-- Email field -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Tu correo electrónico</label>
+                        <input type="email" id="faceEmail" class="form-control dyp-input" placeholder="tu@correo.com" autocomplete="email" />
+                        <div class="form-text text-secondary" style="font-size:.75rem;">Necesario para encontrar tu perfil biométrico</div>
+                    </div>
+
+                    <!-- Camera area -->
+                    <div class="dyp-faceid-wrap mb-3" id="faceWrap">
+                        <video id="faceVideo" class="dyp-faceid-video" autoplay muted playsinline></video>
+                        <canvas id="faceCanvas" class="dyp-faceid-canvas"></canvas>
+
+                        <div class="dyp-faceid-overlay" id="faceOverlay">
+                            <div class="dyp-faceid-ring" id="faceRing">
+                                <i class="bi bi-person-bounding-box"></i>
+                            </div>
+                            <div class="dyp-faceid-status" id="faceStatus">Carga de modelos...</div>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <div class="dyp-faceid-progress mb-3" id="faceProgress" style="display:none;">
+                        <div class="dyp-faceid-bar" id="faceBar"></div>
+                    </div>
+
+                    <!-- Error / info message -->
+                    <div id="faceMsg" class="alert py-2 small mb-3" style="display:none;"></div>
+
+                    <!-- Action button -->
+                    <button type="button" id="faceCamBtn" class="btn btn-danger w-100 btn-lg fw-bold mb-3" disabled>
+                        <i class="bi bi-camera-video me-2"></i>Activar cámara
+                    </button>
+
+                    <div class="d-flex align-items-center mb-3">
+                        <hr class="flex-grow-1 border-secondary opacity-25 m-0" />
+                        <span class="mx-3 text-secondary small text-uppercase" style="letter-spacing:.12em; font-size:.7rem;">O</span>
+                        <hr class="flex-grow-1 border-secondary opacity-25 m-0" />
+                    </div>
+
+                    <a asp-controller="Account" asp-action="Login" class="btn w-100 btn-outline-secondary mb-3">
+                        <i class="bi bi-key me-2"></i>Iniciar sesión con contraseña
+                    </a>
+
+                    <p class="text-center text-secondary small mb-0" style="font-size:.75rem;">
+                        <i class="bi bi-lock-fill me-1"></i>El análisis biométrico ocurre localmente en tu dispositivo. Los datos nunca salen sin cifrar.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+<script>
+(function() {
+    'use strict';
+
+    const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';
+    const VERIFY_URL = '/api/faceid/verify';
+
+    const video   = document.getElementById('faceVideo');
+    const canvas  = document.getElementById('faceCanvas');
+    const ring    = document.getElementById('faceRing');
+    const status  = document.getElementById('faceStatus');
+    const camBtn  = document.getElementById('faceCamBtn');
+    const faceMsg = document.getElementById('faceMsg');
+    const progress= document.getElementById('faceProgress');
+    const bar     = document.getElementById('faceBar');
+    const emailEl = document.getElementById('faceEmail');
+
+    let stream = null;
+    let detecting = false;
+    let modelsLoaded = false;
+
+    // ── Load face-api models ───────────────────────────────────────────
+    async function loadModels() {
+        setStatus('Cargando modelos de IA...', 'secondary');
+        try {
+            await Promise.all([
+                faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+                faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODEL_URL),
+                faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+            ]);
+            modelsLoaded = true;
+            setStatus('Modelos listos. Ingresa tu email y activa la cámara.', 'success');
+            camBtn.disabled = false;
+        } catch (e) {
+            setStatus('Error cargando modelos. Recarga la página.', 'danger');
+            console.error(e);
+        }
+    }
+
+    // ── Camera ────────────────────────────────────────────────────────
+    camBtn.addEventListener('click', async () => {
+        if (!modelsLoaded) return;
+        const email = emailEl.value.trim();
+        if (!email || !email.includes('@@')) {
+            showMsg('Ingresa tu correo electrónico primero.', 'warning');
+            emailEl.focus();
+            return;
+        }
+
+        if (stream) {
+            stopCamera();
+            return;
+        }
+
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480, facingMode: 'user' } });
+            video.srcObject = stream;
+            camBtn.innerHTML = '<i class="bi bi-stop-circle me-2"></i>Cancelar';
+            setStatus('Coloca tu rostro dentro del círculo...', 'info');
+            ring.classList.add('scanning');
+            video.addEventListener('loadedmetadata', startDetection, { once: true });
+        } catch (e) {
+            showMsg('No se pudo acceder a la cámara. Verifica los permisos.', 'danger');
+        }
+    });
+
+    function stopCamera() {
+        if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+        video.srcObject = null;
+        detecting = false;
+        ring.classList.remove('scanning', 'detected', 'success', 'error');
+        camBtn.innerHTML = '<i class="bi bi-camera-video me-2"></i>Activar cámara';
+        setStatus('Modelos listos. Ingresa tu email y activa la cámara.', 'success');
+    }
+
+    // ── Detection loop ────────────────────────────────────────────────
+    function startDetection() {
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        detecting = true;
+        detectLoop();
+    }
+
+    let sampledDescriptors = [];
+    const SAMPLES_NEEDED = 5;
+
+    async function detectLoop() {
+        if (!detecting) return;
+
+        const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
+        const result  = await faceapi.detectSingleFace(video, options)
+                                     .withFaceLandmarks(true)
+                                     .withFaceDescriptor();
+
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (result) {
+            ring.classList.add('detected');
+            ring.classList.remove('error');
+
+            // Draw subtle detection box
+            const box = result.detection.box;
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(box.x, box.y, box.width, box.height);
+
+            // Collect descriptor sample
+            sampledDescriptors.push(Array.from(result.descriptor));
+            const pct = Math.min(100, Math.round((sampledDescriptors.length / SAMPLES_NEEDED) * 100));
+            progress.style.display = 'block';
+            bar.style.width = pct + '%';
+            setStatus(`Analizando... ${pct}%`, 'info');
+
+            if (sampledDescriptors.length >= SAMPLES_NEEDED) {
+                detecting = false;
+                ring.classList.remove('detected');
+                ring.classList.add('success');
+                setStatus('Análisis completo. Verificando identidad...', 'success');
+                await verifyFace();
+                return;
+            }
+        } else {
+            ring.classList.remove('detected');
+        }
+
+        if (detecting) {
+            requestAnimationFrame(detectLoop);
+        }
+    }
+
+    // ── Verify via API ────────────────────────────────────────────────
+    async function verifyFace() {
+        // Average descriptors for robustness
+        const avg = new Array(128).fill(0);
+        for (const d of sampledDescriptors) {
+            for (let i = 0; i < 128; i++) avg[i] += d[i];
+        }
+        for (let i = 0; i < 128; i++) avg[i] /= sampledDescriptors.length;
+
+        const email = emailEl.value.trim();
+
+        try {
+            const res = await fetch(VERIFY_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ descriptor: avg, email })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                setStatus('✅ Identidad verificada. Redirigiendo...', 'success');
+                ring.classList.add('success');
+                stopCamera();
+                setTimeout(() => { window.location.href = data.redirect || '/'; }, 1200);
+            } else {
+                ring.classList.add('error');
+                ring.classList.remove('success');
+                showMsg(data.error || 'Rostro no reconocido.', 'danger');
+                setStatus('Verificación fallida. Intenta de nuevo.', 'danger');
+                // Reset for retry
+                sampledDescriptors = [];
+                progress.style.display = 'none';
+                bar.style.width = '0%';
+                detecting = true;
+                ring.classList.remove('error');
+                requestAnimationFrame(detectLoop);
+            }
+        } catch (e) {
+            showMsg('Error de conexión. Verifica tu internet.', 'danger');
+            setStatus('Error de conexión.', 'danger');
+            sampledDescriptors = [];
+            detecting = true;
+            requestAnimationFrame(detectLoop);
+        }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────
+    function setStatus(msg, type) {
+        status.textContent = msg;
+        status.className = 'dyp-faceid-status text-' + type;
+    }
+
+    function showMsg(msg, type) {
+        faceMsg.textContent = msg;
+        faceMsg.className = 'alert alert-' + type + ' py-2 small mb-3';
+        faceMsg.style.display = 'block';
+        setTimeout(() => { faceMsg.style.display = 'none'; }, 5000);
+    }
+
+    loadModels();
+})();
+</script>
+}

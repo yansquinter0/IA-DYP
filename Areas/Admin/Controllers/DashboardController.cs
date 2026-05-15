@@ -105,5 +105,67 @@ namespace DYPStore.Areas.Admin.Controllers
             if (order != null) { order.Status = status; await _db.SaveChangesAsync(); TempData["Success"] = "Estado del pedido actualizado."; }
             return RedirectToAction("Orders");
         }
+
+        // CHAT LOGS — Historial y auditoría de IA
+        public async Task<IActionResult> ChatLogs(
+            string? role = null,
+            string? intent = null,
+            bool? writeOnly = null,
+            int page = 1)
+        {
+            const int pageSize = 40;
+
+            var query = _db.ChatLogs.AsQueryable();
+
+            if (!string.IsNullOrEmpty(role))
+                query = query.Where(c => c.UserRole == role);
+
+            if (!string.IsNullOrEmpty(intent))
+                query = query.Where(c => c.Intent == intent);
+
+            if (writeOnly == true)
+                query = query.Where(c => c.IsWriteAction);
+
+            var total = await query.CountAsync();
+            var logs = await query
+                .OrderByDescending(c => c.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var allIntents = await _db.ChatLogs
+                .Select(c => c.Intent)
+                .Distinct()
+                .OrderBy(i => i)
+                .ToListAsync();
+
+            ViewBag.Page = page;
+            ViewBag.TotalPages = (int)Math.Ceiling(total / (double)pageSize);
+            ViewBag.TotalLogs = total;
+            ViewBag.FilterRole = role;
+            ViewBag.FilterIntent = intent;
+            ViewBag.FilterWriteOnly = writeOnly;
+            ViewBag.AllIntents = allIntents;
+
+            // Resumen estadístico rápido
+            ViewBag.TotalToday = await _db.ChatLogs
+                .CountAsync(c => c.CreatedAt >= DateTime.UtcNow.Date);
+            ViewBag.TotalWriteActions = await _db.ChatLogs
+                .CountAsync(c => c.IsWriteAction);
+            ViewBag.TotalErrors = await _db.ChatLogs
+                .CountAsync(c => !c.IsSuccess);
+
+            return View(logs);
+        }
+
+        [HttpPost][ValidateAntiForgeryToken]
+        public async Task<IActionResult> ClearChatLogs()
+        {
+            var count = await _db.ChatLogs.CountAsync();
+            _db.ChatLogs.RemoveRange(_db.ChatLogs);
+            await _db.SaveChangesAsync();
+            TempData["Success"] = $"Se eliminaron {count} registros del historial de chat.";
+            return RedirectToAction("ChatLogs");
+        }
     }
 }

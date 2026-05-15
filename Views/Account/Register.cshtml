@@ -1,53 +1,82 @@
 @model RegisterViewModel
-@{ ViewData["Title"] = "Registro"; Layout = "_Layout"; }
+@{
+    ViewData["Title"] = "Registro";
+    Layout = "_Layout";
+}
 
-<div class="min-vh-80 d-flex align-items-center justify-content-center py-5">
-    <div class="w-100" style="max-width:480px;">
-        <div class="dyp-auth-card p-4 p-md-5 rounded-3 mx-3">
-            <div class="text-center mb-4">
-                <i class="bi bi-person-plus-fill text-danger" style="font-size:2.5rem"></i>
-                <h2 class="fw-bold text-uppercase mt-2">Crear Cuenta</h2>
-                <p class="text-secondary small">Únete a la comunidad DYPStore</p>
+<div class="container py-4 py-md-5">
+    <div class="dyp-auth-split">
+        <aside class="dyp-auth-aside" style="background-image: url('https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=1400&q=85');">
+            <div>
+                <span class="dyp-hero-eyebrow"><i class="bi bi-rocket-takeoff-fill"></i>Únete a DYPStore</span>
+                <h2>Empieza tu<br/>próxima racha<br/>en minutos.</h2>
+                <p>Crea tu cuenta y desbloquea acceso a tu carrito guardado, historial de pedidos y recomendaciones personalizadas.</p>
+                <div class="dyp-auth-aside-stats">
+                    <div class="stat"><strong>30s</strong><span>Registro</span></div>
+                    <div class="stat"><strong>0$</strong><span>Sin costo</span></div>
+                    <div class="stat"><strong>100%</strong><span>Seguro</span></div>
+                </div>
             </div>
+        </aside>
 
-            <form asp-controller="Account" asp-action="Register" method="post">
-                @Html.AntiForgeryToken()
+        <div class="d-flex align-items-center justify-content-center px-3 px-md-5">
+            <div class="w-100" style="max-width: 460px;">
+                <div class="dyp-auth-card">
+                    <div class="text-center mb-4">
+                        <div class="dyp-logo fs-3 justify-content-center"><span class="dyp-logo-mark"><i class="bi bi-lightning-charge-fill"></i></span>DYP<span class="text-danger">Store</span></div>
+                        <h2 class="fw-bold mt-3 mb-1" style="font-family:'Barlow Condensed',sans-serif; text-transform:uppercase; letter-spacing:.04em;">Crear Cuenta</h2>
+                        <p class="text-secondary small mb-0">Únete a la comunidad DYPStore</p>
+                    </div>
 
-                <div asp-validation-summary="All" class="alert alert-danger py-2 small" style="display:@(ViewData.ModelState.IsValid?"none":"block")"></div>
+                    <form asp-controller="Account" asp-action="Register" method="post">
+                        @Html.AntiForgeryToken()
 
-                <div class="mb-3">
-                    <label asp-for="FullName" class="form-label text-secondary small text-uppercase fw-bold"></label>
-                    <input asp-for="FullName" class="form-control dyp-input" placeholder="Tu nombre completo" autocomplete="name" />
-                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                        <div asp-validation-summary="All" class="alert alert-danger py-2 small" style="display:@(ViewData.ModelState.IsValid?"none":"block")"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="FullName" class="form-label">Nombre completo</label>
+                            <input asp-for="FullName" class="form-control dyp-input" placeholder="Tu nombre" autocomplete="name" />
+                            <span asp-validation-for="FullName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">Correo electrónico</label>
+                            <input asp-for="Email" class="form-control dyp-input" placeholder="tu@correo.com" autocomplete="email" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Password" class="form-label">Contraseña</label>
+                            <input asp-for="Password" class="form-control dyp-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password"
+                                   data-pwd-strength-target="#pwdBar" data-pwd-strength-label="#pwdLabel" />
+                            <div class="dyp-pwd-strength"><div class="dyp-pwd-strength-bar" id="pwdBar"></div></div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <span asp-validation-for="Password" class="text-danger small"></span>
+                                <small id="pwdLabel" class="fw-semibold"></small>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="ConfirmPassword" class="form-label">Confirmar contraseña</label>
+                            <input asp-for="ConfirmPassword" class="form-control dyp-input" placeholder="Repite tu contraseña" autocomplete="new-password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-danger w-100 btn-lg fw-bold">
+                            <i class="bi bi-person-check-fill me-2"></i>Crear mi cuenta
+                        </button>
+                    </form>
+
+                    <p class="text-center text-secondary small mt-4 mb-0">
+                        ¿Ya tienes cuenta?
+                        <a asp-controller="Account" asp-action="Login" class="text-danger text-decoration-none fw-bold">Inicia sesión</a>
+                    </p>
                 </div>
-
-                <div class="mb-3">
-                    <label asp-for="Email" class="form-label text-secondary small text-uppercase fw-bold"></label>
-                    <input asp-for="Email" class="form-control dyp-input" placeholder="tu@correo.com" autocomplete="email" />
-                    <span asp-validation-for="Email" class="text-danger small"></span>
-                </div>
-
-                <div class="mb-3">
-                    <label asp-for="Password" class="form-label text-secondary small text-uppercase fw-bold"></label>
-                    <input asp-for="Password" class="form-control dyp-input" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
-                    <span asp-validation-for="Password" class="text-danger small"></span>
-                </div>
-
-                <div class="mb-4">
-                    <label asp-for="ConfirmPassword" class="form-label text-secondary small text-uppercase fw-bold"></label>
-                    <input asp-for="ConfirmPassword" class="form-control dyp-input" placeholder="Repite tu contraseña" autocomplete="new-password" />
-                    <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
-                </div>
-
-                <button type="submit" class="btn btn-danger w-100 btn-lg fw-bold">
-                    <i class="bi bi-person-check me-2"></i>Crear Cuenta
-                </button>
-            </form>
-
-            <p class="text-center text-secondary small mt-4">
-                ¿Ya tienes cuenta?
-                <a asp-controller="Account" asp-action="Login" class="text-danger text-decoration-none fw-bold">Inicia sesión</a>
-            </p>
+            </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

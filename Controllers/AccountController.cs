@@ -115,46 +115,161 @@ namespace DYPStore.Controllers
                     var token = await _userManager.GeneratePasswordResetTokenAsync(user);
                     var callbackUrl = Url.Action("ResetPassword", "Account", new { token, email = user.Email }, protocol: Request.Scheme);
                     
-                    string emailBody = $@"
-                        <div style=""background-color: #0f0f0f; padding: 40px 15px; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #ffffff;"">
-                            <div style=""max-width: 600px; margin: 0 auto; background-color: #1a1a1a; border-radius: 12px; overflow: hidden; border: 1px solid #333333; box-shadow: 0 15px 35px rgba(0,0,0,0.5);"">
-                                
-                                <div style=""background: linear-gradient(135deg, #e60023 0%, #a80017 100%); padding: 30px 20px; text-align: center;"">
-                                    <h1 style=""margin: 0; color: #ffffff; font-size: 26px; letter-spacing: 3px; font-weight: 800;"">DYPSTORE</h1>
-                                </div>
+                    var requestTime = System.DateTime.Now.ToString("dd 'de' MMMM 'de' yyyy 'a las' HH:mm", new System.Globalization.CultureInfo("es-CO"));
+                    var ipAddress = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Desconocida";
+                    var userAgent = Request.Headers["User-Agent"].ToString();
+                    string emailBody = $@"<!DOCTYPE html>
+<html lang=""es"">
+<head>
+<meta charset=""UTF-8"">
+<meta name=""viewport"" content=""width=device-width,initial-scale=1.0"">
+<meta name=""color-scheme"" content=""dark"">
+<meta name=""supported-color-schemes"" content=""dark"">
+<title>Restablece tu contraseña · DYPStore</title>
+<link rel=""preconnect"" href=""https://fonts.googleapis.com"">
+<link rel=""preconnect"" href=""https://fonts.gstatic.com"" crossorigin>
+<link href=""https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap"" rel=""stylesheet"">
+<style>
+  @media only screen and (max-width:600px) {{
+    .dyp-card {{ width:100% !important; border-radius:0 !important; }}
+    .dyp-pad {{ padding:28px 22px !important; }}
+    .dyp-h1 {{ font-size:28px !important; line-height:1.05 !important; }}
+    .dyp-cta {{ display:block !important; width:100% !important; box-sizing:border-box; }}
+    .dyp-stack {{ display:block !important; width:100% !important; }}
+    .dyp-stack td {{ display:block !important; width:100% !important; padding:6px 0 !important; }}
+  }}
+</style>
+</head>
+<body style=""margin:0;padding:0;background:#07070a;font-family:'Inter',-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e8e8ee;-webkit-font-smoothing:antialiased;"">
+<div style=""display:none;max-height:0;overflow:hidden;opacity:0;color:#07070a;"">Restablece tu contraseña de DYPStore en un par de clics. Enlace válido por 1 hora.</div>
 
-                                <div style=""padding: 40px 30px;"">
-                                    <h2 style=""margin-top: 0; color: #ffffff; font-size: 22px; font-weight: 600;"">Recuperación de Contraseña</h2>
-                                    
-                                    <p style=""color: #cccccc; font-size: 16px; line-height: 1.6;"">
-                                        Hola <strong style=""color: #ffffff;"">{user.FullName}</strong>,
-                                    </p>
-                                    
-                                    <p style=""color: #cccccc; font-size: 16px; line-height: 1.6; margin-bottom: 35px;"">
-                                        Hemos recibido una solicitud para cambiar tu contraseña en tu cuenta de <strong style=""color: #ffffff;"">DYPStore</strong>. Haz clic en el botón de abajo para elegir una nueva contraseña:
-                                    </p>
-                                    
-                                    <div style=""text-align: center; margin: 40px 0;"">
-                                        <a href='{callbackUrl}' style=""background-color: #e60023; color: #ffffff; padding: 15px 35px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;"">Restablecer Mi Contraseña</a>
-                                    </div>
-                                    
-                                    <p style=""color: #888888; font-size: 14px; line-height: 1.5; margin-bottom: 25px; border-top: 1px solid #333333; padding-top: 25px;"">
-                                        Si no hiciste esta solicitud, puedes ignorar este mensaje tranquilamente. Tu cuenta está segura.
-                                    </p>
-                                    
-                                    <div style=""background-color: #111111; padding: 15px; border-radius: 8px; overflow-wrap: break-word; word-break: break-all;"">
-                                        <p style=""color: #777777; font-size: 12px; margin: 0 0 5px 0;"">Enlace directo (si el botón no funciona):</p>
-                                        <a href='{callbackUrl}' style=""color: #e60023; font-size: 12px; text-decoration: none;"">{callbackUrl}</a>
-                                    </div>
-                                </div>
-                                
-                                <div style=""background-color: #111111; padding: 20px; text-align: center; border-top: 1px solid #222222;"">
-                                    <p style=""color: #555555; font-size: 12px; margin: 0;"">
-                                        &copy; {System.DateTime.Now.Year} DYPSTORE. Todos los derechos reservados.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>";
+<table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""background:#07070a;background-image:radial-gradient(900px 500px at 10% -10%, rgba(255,45,77,0.18), transparent 60%),radial-gradient(700px 400px at 110% 0%, rgba(78,161,255,0.10), transparent 60%);padding:40px 16px;"">
+  <tr><td align=""center"">
+
+    <table role=""presentation"" class=""dyp-card"" width=""600"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""max-width:600px;width:100%;background:#0d0d12;border:1px solid rgba(255,255,255,0.08);border-radius:18px;overflow:hidden;box-shadow:0 30px 70px rgba(0,0,0,0.55);"">
+
+      <!-- HERO -->
+      <tr><td style=""background:linear-gradient(135deg,#ff2d4d 0%,#ff7849 60%,#ffb547 100%);padding:36px 32px;text-align:center;position:relative;"">
+        <table role=""presentation"" align=""center"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+          <tr>
+            <td style=""background:rgba(0,0,0,0.25);width:48px;height:48px;border-radius:14px;text-align:center;vertical-align:middle;font-size:26px;line-height:48px;color:#fff;border:1px solid rgba(255,255,255,0.25);"">⚡</td>
+            <td style=""padding-left:14px;font-family:'Barlow Condensed','Segoe UI',sans-serif;font-weight:900;font-size:32px;letter-spacing:.04em;color:#fff;text-transform:uppercase;line-height:1;"">DYP<span style=""color:#14141a;"">Store</span></td>
+          </tr>
+        </table>
+        <div style=""margin-top:14px;display:inline-block;background:rgba(0,0,0,0.28);color:#fff;padding:6px 14px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;"">🔐 Solicitud de seguridad</div>
+      </td></tr>
+
+      <!-- BODY -->
+      <tr><td class=""dyp-pad"" style=""padding:44px 40px 32px;"">
+        <div style=""font-family:'Barlow Condensed','Segoe UI',sans-serif;color:#9a9aab;font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px;"">Recupera tu acceso</div>
+        <h1 class=""dyp-h1"" style=""margin:0 0 18px;font-family:'Barlow Condensed','Segoe UI',sans-serif;font-weight:900;font-size:38px;line-height:1.05;color:#ffffff;text-transform:uppercase;letter-spacing:.005em;"">
+          Hola, <span style=""color:#ff2d4d;"">{user.FullName}</span>.<br/>Vuelve al ring.
+        </h1>
+        <p style=""margin:0 0 28px;color:#c8c8d2;font-size:16px;line-height:1.65;"">
+          Recibimos una solicitud para restablecer la contraseña de tu cuenta en <strong style=""color:#fff;"">DYPStore</strong>. Toca el botón y crea una nueva en menos de 30 segundos.
+        </p>
+
+        <!-- CTA Button (bulletproof for Outlook) -->
+        <table role=""presentation"" align=""center"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:8px auto 18px;"">
+          <tr><td align=""center"" bgcolor=""#ff2d4d"" style=""border-radius:14px;background:linear-gradient(135deg,#ff2d4d 0%,#e6213e 100%);box-shadow:0 12px 30px rgba(255,45,77,0.35);"">
+            <a class=""dyp-cta"" href=""{callbackUrl}"" target=""_blank"" style=""display:inline-block;padding:18px 42px;font-family:'Barlow Condensed','Segoe UI',sans-serif;font-weight:800;font-size:18px;color:#ffffff;text-decoration:none;text-transform:uppercase;letter-spacing:.08em;border-radius:14px;mso-padding-alt:0;"">
+              ⚡ Restablecer mi contraseña →
+            </a>
+          </td></tr>
+        </table>
+
+        <p style=""margin:0 0 30px;text-align:center;color:#9a9aab;font-size:13px;"">
+          ⏱ Este enlace expira en <strong style=""color:#ffb547;"">1 hora</strong> por tu seguridad.
+        </p>
+
+        <!-- Detalles de la solicitud -->
+        <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""background:#16161d;border:1px solid rgba(255,255,255,0.06);border-radius:14px;margin:8px 0 26px;"">
+          <tr><td style=""padding:18px 20px;"">
+            <div style=""font-family:'Barlow Condensed','Segoe UI',sans-serif;color:#ff2d4d;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px;"">📋 Detalles de la solicitud</div>
+            <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+              <tr><td style=""padding:6px 0;color:#9a9aab;font-size:13px;width:110px;"">Cuenta</td><td style=""padding:6px 0;color:#fff;font-size:13px;font-weight:600;"">{user.Email}</td></tr>
+              <tr><td style=""padding:6px 0;color:#9a9aab;font-size:13px;"">Fecha</td><td style=""padding:6px 0;color:#fff;font-size:13px;font-weight:600;"">{requestTime}</td></tr>
+              <tr><td style=""padding:6px 0;color:#9a9aab;font-size:13px;"">IP</td><td style=""padding:6px 0;color:#fff;font-size:13px;font-weight:600;font-family:ui-monospace,Menlo,monospace;"">{ipAddress}</td></tr>
+            </table>
+          </td></tr>
+        </table>
+
+        <!-- Aviso de seguridad -->
+        <table role=""presentation"" width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""background:rgba(255,181,71,0.08);border:1px solid rgba(255,181,71,0.25);border-radius:12px;margin:0 0 26px;"">
+          <tr><td style=""padding:16px 18px;"">
+            <table role=""presentation"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+              <tr>
+                <td style=""vertical-align:top;font-size:22px;line-height:1;padding-right:12px;"">⚠️</td>
+                <td>
+                  <div style=""color:#ffb547;font-weight:700;font-size:14px;margin-bottom:4px;"">¿No fuiste tú?</div>
+                  <div style=""color:#c8c8d2;font-size:13px;line-height:1.55;"">Ignora este mensaje. Tu contraseña actual seguirá siendo válida y nadie podrá entrar a tu cuenta.</div>
+                </td>
+              </tr>
+            </table>
+          </td></tr>
+        </table>
+
+        <!-- Tips de seguridad -->
+        <div style=""font-family:'Barlow Condensed','Segoe UI',sans-serif;color:#9a9aab;font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;margin:0 0 12px;"">🛡 Tips para una contraseña fuerte</div>
+        <table role=""presentation"" class=""dyp-stack"" width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"" style=""margin:0 0 30px;"">
+          <tr>
+            <td valign=""top"" style=""width:33.33%;padding-right:6px;"">
+              <div style=""background:#16161d;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;text-align:center;"">
+                <div style=""font-size:22px;margin-bottom:6px;"">🔢</div>
+                <div style=""color:#fff;font-size:12px;font-weight:700;line-height:1.3;"">8+ caracteres</div>
+              </div>
+            </td>
+            <td valign=""top"" style=""width:33.33%;padding:0 3px;"">
+              <div style=""background:#16161d;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;text-align:center;"">
+                <div style=""font-size:22px;margin-bottom:6px;"">🔠</div>
+                <div style=""color:#fff;font-size:12px;font-weight:700;line-height:1.3;"">Mayús + minús</div>
+              </div>
+            </td>
+            <td valign=""top"" style=""width:33.33%;padding-left:6px;"">
+              <div style=""background:#16161d;border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:14px;text-align:center;"">
+                <div style=""font-size:22px;margin-bottom:6px;"">🎯</div>
+                <div style=""color:#fff;font-size:12px;font-weight:700;line-height:1.3;"">Símbolo + número</div>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <!-- Enlace directo -->
+        <div style=""border-top:1px solid rgba(255,255,255,0.07);padding-top:22px;"">
+          <p style=""margin:0 0 8px;color:#9a9aab;font-size:12px;"">¿El botón no funciona? Copia y pega este enlace:</p>
+          <div style=""background:#0a0a0e;border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px;word-break:break-all;"">
+            <a href=""{callbackUrl}"" style=""color:#ff7849;font-size:12px;text-decoration:none;font-family:ui-monospace,Menlo,monospace;"">{callbackUrl}</a>
+          </div>
+        </div>
+      </td></tr>
+
+      <!-- Pie con valores -->
+      <tr><td style=""background:#0a0a0e;padding:24px 32px;border-top:1px solid rgba(255,255,255,0.06);"">
+        <table role=""presentation"" class=""dyp-stack"" width=""100%"" cellpadding=""0"" cellspacing=""0"" border=""0"">
+          <tr>
+            <td style=""text-align:center;padding:6px;color:#c8c8d2;font-size:11px;"">🚚 <strong style=""color:#fff;"">Envío 24-48h</strong></td>
+            <td style=""text-align:center;padding:6px;color:#c8c8d2;font-size:11px;"">🔄 <strong style=""color:#fff;"">Cambios fáciles</strong></td>
+            <td style=""text-align:center;padding:6px;color:#c8c8d2;font-size:11px;"">🛡 <strong style=""color:#fff;"">Garantía premium</strong></td>
+          </tr>
+        </table>
+      </td></tr>
+
+      <!-- Footer -->
+      <tr><td style=""background:#07070a;padding:24px 32px;text-align:center;"">
+        <div style=""font-family:'Barlow Condensed','Segoe UI',sans-serif;font-weight:800;font-size:18px;color:#fff;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;"">⚡ DYPStore</div>
+        <p style=""margin:0 0 10px;color:#7a7a87;font-size:11px;line-height:1.6;"">Equipamiento deportivo premium · Boxeo · Calzado · Suplementos</p>
+        <p style=""margin:0;color:#5a5a67;font-size:11px;"">Este es un correo automático. Por favor no respondas. Si necesitas ayuda escribe a <a href=""mailto:soporte@dypstore.com"" style=""color:#ff7849;text-decoration:none;"">soporte@dypstore.com</a>.</p>
+        <p style=""margin:14px 0 0;color:#3a3a47;font-size:10px;"">&copy; {System.DateTime.Now.Year} DYPStore. Todos los derechos reservados.</p>
+      </td></tr>
+
+    </table>
+
+    <p style=""margin:18px auto 0;color:#3a3a47;font-size:10px;text-align:center;max-width:600px;"">Recibiste este correo porque alguien (esperamos que tú) solicitó restablecer la contraseña asociada a {user.Email}.</p>
+
+  </td></tr>
+</table>
+</body>
+</html>";
 
                     await _emailSender.SendEmailAsync(model.Email, "Recuperar Contraseña - DYPStore", emailBody);
                 }

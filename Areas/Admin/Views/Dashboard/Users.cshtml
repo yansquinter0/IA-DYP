@@ -1,16 +1,30 @@
 @model IEnumerable<DYPStore.Models.ApplicationUser>
 @{ ViewData["Title"] = "Usuarios"; var roles = ViewBag.UserRoles as Dictionary<string, IList<string>>; }
 
-<h2 class="fw-medium text-uppercase mb-4">Gestión de Usuarios</h2>
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-3 mb-4">
+    <div>
+        <div class="dyp-section-eyebrow">Comunidad</div>
+        <h2 class="dyp-section-title mb-0">Gestión de Usuarios</h2>
+    </div>
+    <span class="badge bg-secondary px-3 py-2"><i class="bi bi-people me-1"></i>@Model.Count() usuarios</span>
+</div>
 
-<!-- Desktop table -->
-<div class="d-none d-md-block dyp-summary-box rounded-3 overflow-hidden">
+<div class="dyp-summary-box mb-4" style="padding: 1.25rem 1.5rem;">
+    <div class="dyp-search-pill" style="max-width:420px;">
+        <i class="bi bi-search text-secondary me-2"></i>
+        <input type="search" placeholder="Buscar por nombre o correo..." data-table-search=".dyp-user-row, .dyp-user-mobile" />
+    </div>
+</div>
+
+<div class="d-none d-md-block dyp-admin-table">
     <div class="table-responsive">
         <table class="table table-dark table-hover mb-0">
-            <thead style="background:#111;border-bottom:1px solid #333;">
-                <tr class="text-secondary text-uppercase small">
-                    <th class="p-3">Nombre</th><th class="p-3">Email</th>
-                    <th class="p-3">Rol</th><th class="p-3 text-end">Acciones</th>
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Email</th>
+                    <th>Rol</th>
+                    <th class="text-end">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -18,25 +32,37 @@
                 {
                     var userRoles = roles?[u.Id] ?? new List<string>();
                     var isAdmin = userRoles.Contains("Admin");
-                    <tr style="border-bottom:1px solid #1f1f1f;">
-                        <td class="p-3 fw-normal text-light align-middle">@u.FullName</td>
-                        <td class="p-3 text-secondary align-middle">@u.Email</td>
-                        <td class="p-3 align-middle">
-                            <span class="badge @(isAdmin?"bg-danger":"bg-secondary") fw-normal">@(isAdmin?"Admin":"Usuario")</span>
+                    var initials = string.Join("", (u.FullName ?? u.Email ?? "?").Split(' ').Take(2).Select(s => s.Length > 0 ? s[0].ToString() : ""));
+                    <tr class="dyp-user-row">
+                        <td>
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="dyp-avatar">@initials</div>
+                                <div class="text-white fw-semibold">@u.FullName</div>
+                            </div>
                         </td>
-                        <td class="p-3 text-end align-middle">
+                        <td class="text-secondary">@u.Email</td>
+                        <td>
+                            @if (isAdmin)
+                            {
+                                <span class="badge bg-danger px-3 py-2"><i class="bi bi-shield-lock-fill me-1"></i>Admin</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary px-3 py-2"><i class="bi bi-person me-1"></i>Usuario</span>
+                            }
+                        </td>
+                        <td class="text-end">
                             <form asp-action="ToggleAdmin" method="post" class="d-inline">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="userId" value="@u.Id" />
-                                <button type="submit" class="btn btn-sm @(isAdmin?"btn-outline-secondary":"btn-outline-success") me-1 fw-normal">
-                                    <i class="bi bi-@(isAdmin?"shield-x":"shield-check") me-1"></i>
-                                    @(isAdmin?"Quitar Admin":"Hacer Admin")
+                                <button type="submit" class="btn btn-sm @(isAdmin?"btn-outline-secondary":"btn-outline-success") me-1">
+                                    <i class="bi bi-@(isAdmin?"shield-x":"shield-check") me-1"></i>@(isAdmin?"Quitar Admin":"Hacer Admin")
                                 </button>
                             </form>
-                            <form asp-action="DeleteUser" method="post" class="d-inline" onsubmit="return confirm('¿Eliminar a @u.FullName?')">
+                            <form asp-action="DeleteUser" method="post" class="d-inline" data-confirm="¿Eliminar a @u.FullName? Esta acción no se puede deshacer.">
                                 @Html.AntiForgeryToken()
                                 <input type="hidden" name="userId" value="@u.Id" />
-                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i></button>
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar"><i class="bi bi-trash3"></i></button>
                             </form>
                         </td>
                     </tr>
@@ -46,33 +72,34 @@
     </div>
 </div>
 
-<!-- Mobile cards -->
 <div class="d-md-none">
     @foreach (var u in Model)
     {
         var userRoles = roles?[u.Id] ?? new List<string>();
         var isAdmin = userRoles.Contains("Admin");
-        <div class="dyp-summary-box rounded-3 p-3 mb-3">
-            <div class="d-flex justify-content-between align-items-start gap-2">
+        var initials = string.Join("", (u.FullName ?? u.Email ?? "?").Split(' ').Take(2).Select(s => s.Length > 0 ? s[0].ToString() : ""));
+        <div class="dyp-summary-box mb-3 dyp-user-mobile" style="padding:1rem;">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <div class="dyp-avatar">@initials</div>
                 <div class="flex-grow-1 min-w-0">
-                    <div class="fw-bold small">@u.FullName</div>
+                    <div class="fw-semibold text-white text-truncate">@u.FullName</div>
                     <div class="text-secondary small text-truncate">@u.Email</div>
-                    <span class="badge @(isAdmin?"bg-danger":"bg-secondary") mt-1">@(isAdmin?"Admin":"Usuario")</span>
                 </div>
-                <div class="d-flex gap-1 flex-shrink-0">
-                    <form asp-action="ToggleAdmin" method="post">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="userId" value="@u.Id" />
-                        <button type="submit" class="btn btn-sm @(isAdmin?"btn-outline-secondary":"btn-outline-success")" title="@(isAdmin?"Quitar Admin":"Hacer Admin")">
-                            <i class="bi bi-@(isAdmin?"shield-x":"shield-check")"></i>
-                        </button>
-                    </form>
-                    <form asp-action="DeleteUser" method="post" onsubmit="return confirm('¿Eliminar?')">
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" name="userId" value="@u.Id" />
-                        <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i></button>
-                    </form>
-                </div>
+                <span class="badge @(isAdmin?"bg-danger":"bg-secondary")">@(isAdmin?"Admin":"Usuario")</span>
+            </div>
+            <div class="d-flex gap-2">
+                <form asp-action="ToggleAdmin" method="post" class="flex-grow-1">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="userId" value="@u.Id" />
+                    <button type="submit" class="btn btn-sm @(isAdmin?"btn-outline-secondary":"btn-outline-success") w-100">
+                        <i class="bi bi-@(isAdmin?"shield-x":"shield-check") me-1"></i>@(isAdmin?"Quitar Admin":"Hacer Admin")
+                    </button>
+                </form>
+                <form asp-action="DeleteUser" method="post" data-confirm="¿Eliminar?">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="userId" value="@u.Id" />
+                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i></button>
+                </form>
             </div>
         </div>
     }

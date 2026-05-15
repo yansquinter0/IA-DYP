@@ -1,79 +1,93 @@
 @{ ViewData["Title"] = "Dashboard"; }
 
-<h2 class="fw-bold text-uppercase mb-4">Panel de Administración</h2>
+<div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-2">
+    <div>
+        <div class="dyp-section-eyebrow">Vista general</div>
+        <h2 class="dyp-section-title mb-0">Panel de Administración</h2>
+    </div>
+    <div class="text-secondary small">
+        <i class="bi bi-calendar3 me-1"></i>@DateTime.Now.ToString("dddd, dd MMMM yyyy")
+    </div>
+</div>
 
-<div class="row g-3 mb-5">
+<div class="row g-3 mb-5 dyp-reveal-stagger">
     <div class="col-6 col-md-3">
-        <div class="dyp-stat-card p-4 rounded-3">
-            <i class="bi bi-box-seam text-danger fs-1 mb-2"></i>
-            <div class="fs-2 fw-bold">@ViewBag.TotalProducts</div>
-            <div class="text-secondary small text-uppercase">Productos</div>
+        <div class="dyp-stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="stat-icon red"><i class="bi bi-box-seam"></i></div>
+            </div>
+            <div class="stat-value">@ViewBag.TotalProducts</div>
+            <div class="stat-label">Productos</div>
+            <div class="stat-trend"><i class="bi bi-collection"></i>En catálogo</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="dyp-stat-card p-4 rounded-3">
-            <i class="bi bi-receipt text-warning fs-1 mb-2"></i>
-            <div class="fs-2 fw-bold">@ViewBag.TotalOrders</div>
-            <div class="text-secondary small text-uppercase">Pedidos</div>
+        <div class="dyp-stat-card">
+            <div class="stat-icon amber"><i class="bi bi-receipt"></i></div>
+            <div class="stat-value">@ViewBag.TotalOrders</div>
+            <div class="stat-label">Pedidos</div>
+            <div class="stat-trend"><i class="bi bi-bag-check"></i>Total histórico</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="dyp-stat-card p-4 rounded-3">
-            <i class="bi bi-people text-info fs-1 mb-2"></i>
-            <div class="fs-2 fw-bold">@ViewBag.TotalUsers</div>
-            <div class="text-secondary small text-uppercase">Usuarios</div>
+        <div class="dyp-stat-card">
+            <div class="stat-icon blue"><i class="bi bi-people"></i></div>
+            <div class="stat-value">@ViewBag.TotalUsers</div>
+            <div class="stat-label">Usuarios</div>
+            <div class="stat-trend"><i class="bi bi-person-check"></i>Registrados</div>
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="dyp-stat-card p-4 rounded-3">
-            <i class="bi bi-currency-dollar text-success fs-1 mb-2"></i>
-            <div class="fs-2 fw-bold">$@((decimal)ViewBag.TotalRevenue).ToString("N0")</div>
-            <div class="text-secondary small text-uppercase">Ingresos</div>
+        <div class="dyp-stat-card">
+            <div class="stat-icon green"><i class="bi bi-currency-dollar"></i></div>
+            <div class="stat-value">$@((decimal)ViewBag.TotalRevenue).ToString("N0")</div>
+            <div class="stat-label">Ingresos</div>
+            <div class="stat-trend"><i class="bi bi-graph-up-arrow"></i>Acumulado</div>
         </div>
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-12 col-md-6">
-        <a asp-action="Products" class="text-decoration-none">
-            <div class="dyp-admin-card p-4 rounded-3">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 p-3" style="background:#dc35451a;"><i class="bi bi-box-seam text-danger fs-3"></i></div>
-                    <div>
-                        <h5 class="fw-bold mb-0">Gestionar Productos</h5>
-                        <small class="text-secondary">Añadir, editar o eliminar inventario.</small>
-                    </div>
+<div class="row g-4 dyp-reveal-stagger">
+    <div class="col-12 col-lg-4">
+        <a asp-action="Products" class="dyp-admin-card">
+            <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="rounded-3 d-inline-flex align-items-center justify-content-center" style="width:52px; height:52px; background:rgba(var(--dyp-red-glow),.14);">
+                    <i class="bi bi-box-seam-fill text-danger fs-3"></i>
                 </div>
-                <span class="btn btn-danger btn-sm">Ir a Productos <i class="bi bi-arrow-right ms-1"></i></span>
+                <div>
+                    <h5 class="fw-bold mb-1 text-white">Gestionar Productos</h5>
+                    <p class="text-secondary small mb-0">Añadir, editar o eliminar inventario y precios.</p>
+                </div>
             </div>
+            <span class="btn btn-danger btn-sm">Ir a Productos <i class="bi bi-arrow-right ms-1"></i></span>
         </a>
     </div>
-    <div class="col-12 col-md-6">
-        <a asp-action="Users" class="text-decoration-none">
-            <div class="dyp-admin-card p-4 rounded-3">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 p-3" style="background:#0d6efd1a;"><i class="bi bi-people text-primary fs-3"></i></div>
-                    <div>
-                        <h5 class="fw-bold mb-0">Gestionar Usuarios</h5>
-                        <small class="text-secondary">Ver usuarios y asignar roles.</small>
-                    </div>
+    <div class="col-12 col-lg-4">
+        <a asp-action="Users" class="dyp-admin-card">
+            <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="rounded-3 d-inline-flex align-items-center justify-content-center" style="width:52px; height:52px; background:rgba(78,161,255,.14);">
+                    <i class="bi bi-people-fill text-primary fs-3"></i>
                 </div>
-                <span class="btn btn-primary btn-sm">Ir a Usuarios <i class="bi bi-arrow-right ms-1"></i></span>
+                <div>
+                    <h5 class="fw-bold mb-1 text-white">Gestionar Usuarios</h5>
+                    <p class="text-secondary small mb-0">Ver usuarios y asignar roles administrativos.</p>
+                </div>
             </div>
+            <span class="btn btn-primary btn-sm">Ir a Usuarios <i class="bi bi-arrow-right ms-1"></i></span>
         </a>
     </div>
-    <div class="col-12 col-md-6">
-        <a asp-action="Orders" class="text-decoration-none">
-            <div class="dyp-admin-card p-4 rounded-3">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="rounded-3 p-3" style="background:#ffc1071a;"><i class="bi bi-receipt text-warning fs-3"></i></div>
-                    <div>
-                        <h5 class="fw-bold mb-0">Gestionar Pedidos</h5>
-                        <small class="text-secondary">Ver y actualizar estado de pedidos.</small>
-                    </div>
+    <div class="col-12 col-lg-4">
+        <a asp-action="Orders" class="dyp-admin-card">
+            <div class="d-flex align-items-start gap-3 mb-3">
+                <div class="rounded-3 d-inline-flex align-items-center justify-content-center" style="width:52px; height:52px; background:rgba(255,181,71,.14);">
+                    <i class="bi bi-receipt text-warning fs-3"></i>
                 </div>
-                <span class="btn btn-warning btn-sm text-dark">Ir a Pedidos <i class="bi bi-arrow-right ms-1"></i></span>
+                <div>
+                    <h5 class="fw-bold mb-1 text-white">Gestionar Pedidos</h5>
+                    <p class="text-secondary small mb-0">Revisar y actualizar el estado de los pedidos.</p>
+                </div>
             </div>
+            <span class="btn btn-sm" style="background:var(--dyp-amber); color:#2a1c08; font-weight:700; border:none;">Ir a Pedidos <i class="bi bi-arrow-right ms-1"></i></span>
         </a>
     </div>
 </div>

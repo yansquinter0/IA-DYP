@@ -6,10 +6,12 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Base de Datos
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+// 1. Base de Datos (Failover con DatabaseSteward)
+builder.Services.AddSingleton<DatabaseSteward>();
+builder.Services.AddDbContext<ApplicationDbContext>((sp, options) => {
+    var steward = sp.GetRequiredService<DatabaseSteward>();
+    options.UseNpgsql(steward.GetConnectionString());
+});
 
 // 2. Identity
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
@@ -22,13 +24,22 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options => {
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
-// 3. Servicios Obligatorios (Asegúrate de que la interfaz y clase existan)
+// 3. Servicios
 builder.Services.AddTransient<IEmailSender, EmailSender>();
+builder.Services.AddScoped<ChatbotService>();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddSession();
 
 var app = builder.Build();
+
+// Middleware para inyectar el estado de Failover para el Frontend
+app.Use(async (context, next) =>
+{
+    var steward = context.RequestServices.GetRequiredService<DatabaseSteward>();
+    context.Items["IsSecondaryDb"] = steward.IsUsingSecondaryDb;
+    await next();
+});
 
 // Inicializar DB: crear roles, admin y productos de ejemplo
 using (var scope = app.Services.CreateScope())
@@ -48,6 +59,8 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
+
+app.MapControllers(); // attribute-routed controllers (FaceIdController, ChatbotController, etc.)
 
 app.MapControllerRoute(
     name: "areas",
