@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using DYPStore.Data;
 using DYPStore.Models;
 using DYPStore.Services;
@@ -32,6 +33,12 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddSession();
 
 var app = builder.Build();
+
+// Configuración para proxies inversos (ej. Render, Heroku)
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 // Middleware para inyectar el estado de Failover para el Frontend
 app.Use(async (context, next) =>
