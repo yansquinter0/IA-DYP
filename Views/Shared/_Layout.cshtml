@@ -575,52 +575,6 @@
 })();
 </script>
 
-<!-- ============================================================
-     DYPSTORE — CHATBOT IA WIDGET
-     ============================================================ -->
-
-<!-- Floating chat button -->
-<button type="button" id="dypChatFab" class="dyp-chatbot-fab" aria-label="Abrir asistente IA" title="Asistente IA DYPStore">
-    <i class="bi bi-lightning-charge-fill icon-chat"></i>
-    <i class="bi bi-x-lg icon-close"></i>
-</button>
-
-<!-- Chat panel -->
-<div id="dypChatPanel" class="dyp-chatbot-panel" role="dialog" aria-label="Asistente de DYPStore">
-    <!-- Header -->
-    <div class="dyp-chatbot-header">
-        <div class="dyp-chatbot-header-icon"><i class="bi bi-lightning-charge-fill"></i></div>
-        <div class="dyp-chatbot-header-info">
-            <strong>Asistente DYPStore</strong>
-            <small>En línea</small>
-        </div>
-        @if (User.IsInRole("Admin"))
-        {
-            <span class="dyp-chatbot-role-badge admin">Admin</span>
-        }
-        else if (User.Identity?.IsAuthenticated == true)
-        {
-            <span class="dyp-chatbot-role-badge user">User</span>
-        }
-    </div>
-
-    <!-- Messages -->
-    <div id="dypChatMessages" class="dyp-chatbot-messages"></div>
-
-    <!-- Quick chips -->
-    <div id="dypChatChips" class="dyp-chatbot-chips"></div>
-
-    <!-- Input area -->
-    <div class="dyp-chatbot-input-area">
-        <input id="dypChatInput" type="text" placeholder="Escribe o usa el micrófono..." maxlength="500" autocomplete="off" />
-        <button type="button" id="dypChatVoiceBtn" class="dyp-chat-voice-btn" title="Dictar mensaje" aria-label="Dictar mensaje">
-            <i class="bi bi-mic-fill"></i>
-        </button>
-        <button type="button" id="dypChatSendBtn" class="dyp-chat-send-btn" aria-label="Enviar">
-            <i class="bi bi-send-fill"></i>
-        </button>
-    </div>
-</div>
-
+<partial name="_AIChatWidget" />
 </body>
 </html>
